@@ -63,6 +63,7 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+.nb*
 
 ####### WINDOWS.GITIGNORE #######
 
@@ -258,3 +259,5 @@ spark-warehouse/
 *.dat.bz2
 small-sample.dat.bz2
 medium-sample.dat.bz2
+Datasets/
+build.xml
