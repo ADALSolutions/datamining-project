@@ -9,6 +9,7 @@ import org.apache.spark.mllib.feature.IDF;
 import org.apache.spark.mllib.feature.Word2Vec;
 import org.apache.spark.mllib.feature.Word2VecModel;
 import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.sql.*;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -37,11 +38,17 @@ public class ProjectMain {
     // times.
     JavaRDD<Iterable<String>> lemmas = (JavaRDD<Iterable<String>>) Lemmatizer.lemmatize(texts).cache();
 
+      /*
+    // Create and configure an object of type Word2Vec which is needed to fit our model.
     Word2Vec word2vec = new Word2Vec()
       .setVectorSize(100);
       
+    // Use the object of type Word2Vec to fit a model based on the preprocesed tokenized dataset (lemmas).
     Word2VecModel model = word2vec.fit(lemmas);
     
+    // Transform the lemmas using the word2vec model.
+    JavaRDD<Row> vectors = model.transform(lemmas);
+      /*
       /*
       
     // Transform the sequence of lemmas in vectors of counts in a
