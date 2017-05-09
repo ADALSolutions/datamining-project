@@ -254,3 +254,6 @@ spark-warehouse/
 *.msi
 *.msm
 *.msp
+
+*.dat.bz2
+small-sample.dat.bz2/
