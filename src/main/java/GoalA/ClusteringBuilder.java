@@ -96,11 +96,7 @@ public class ClusteringBuilder
     {
         Clustering primeClustering=new Clustering( P,k);
         boolean stopping_condition=false;
-        for(int i = 0; i <= k - 1; i++)
-        {
-                Point centroid = primeClustering.getRandom();
-                primeClustering.addCentroid(centroid);
-        }
+        initRandomCentroids(primeClustering,k);
         double phi = Double.MAX_VALUE;
         boolean stoppingCondition = false;
 
@@ -131,6 +127,57 @@ public class ClusteringBuilder
         return primeClustering;
         
     }
+    
+    //scrive nuovi centroidi dentro al clustering
+    public static void initRandomCentroids(Clustering primeClustering,int k)
+    {
+        for(int i = 0; i <= k - 1; i++)
+        {
+                Point centroid = primeClustering.getRandom();
+                primeClustering.addCentroid(centroid);
+        }        
+    }
+    public static void kmeansPlusPlus(Clustering primeClustering,int k)
+    {
+        
+    }
+    public static Clustering PartitioningAroundMedoids(ArrayList<Point> P,ArrayList<Point> S,int k)
+    {
+        Clustering C_init = ClusteringBuilder.PARTITION(P, S,k);
+        boolean stopping_condition = false;
+        
+        while (!stopping_condition)
+        {
+            stopping_condition = true;
+            P.removeAll(S);
+            boolean condition_exit=false;
+            for (int i=0;i<P.size();i++)
+            {
+                if(condition_exit)break;
+                Point p=P.get(i);
+                ArrayList<Point> Sprimo=(ArrayList<Point>) S.clone();
+                for(int j=0;j<S.size();j++) 
+                {
+                    Point c=S.get(j);
+                    Sprimo.remove(c);
+                    Sprimo.add(p);
+                    P.addAll(S);
+                    Clustering Cprimo = ClusteringBuilder.PARTITION(P, Sprimo, k);
+                    double phimedianPrimo=Cprimo.kmedian();
+                    double phimedian=C_init.kmedian();
+                    if (phimedianPrimo<phimedian)
+                    {
+                        stopping_condition = false;
+                        C_init=Cprimo;
+                        condition_exit=true;
+                        break;
+                    }
+                }
+            }
+        }
+        return C_init;        
+    }    
+
     
     
     
