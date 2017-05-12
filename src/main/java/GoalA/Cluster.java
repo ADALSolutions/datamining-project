@@ -14,7 +14,12 @@ public class Cluster {
 		this.c = null;
 		this.id = id;
 	}
- 
+	public Cluster() {
+		this.P = new ArrayList<Point>();
+	} 
+	public Cluster(ArrayList<Point> ap) {
+		this.P = ap;
+	}         
 	public void addPoint(Point p) {
 		P.add(p);
 	}

@@ -12,70 +12,84 @@ public class Clustering {
 	
     public int k;
     private ArrayList<Point> P; // Points that belong to the clustering
-    private ArrayList<Cluster> CC; // Clusters that belong to the clustering
-    private ArrayList<Point> cc; // Centroids that belong to the clustering {public void partition()}
+    private ArrayList<Cluster> clusters; // Clusters that belong to the clustering
+    private ArrayList<Point> centroids; // Centroids that belong to the clustering {public void partition()}
     
     public Clustering(int k) {
     	this.k = k;
     	this.P = new ArrayList<Point>();
-    	this.CC = new ArrayList<Cluster>();  
-    	this.cc = new ArrayList<Point>();
+    	this.clusters = new ArrayList<Cluster>();  
+    	this.centroids = new ArrayList<Point>();
+    }
+
+    public Clustering( ArrayList<Point> P, ArrayList<Cluster> clusters, ArrayList<Point> centroids,int k) {
+        this.k = k;
+        this.P = P;
+        this.clusters = clusters;
+        this.centroids = centroids;
     }
     
     public void addPoint(Point p) {
 		P.add(p);
 	}
     
-    
-	
 	public ArrayList<Point> getPoints() {
 		return P;
 	}
 	
 	public void addCluster(Cluster C){
-		CC.add(C);
+		clusters.add(C);
 	}
 	
 	public ArrayList<Cluster> getClusters(){
-		return CC;
+		return clusters;
 	}
 	
 	public void addCentroid(Point c){
-		cc.add(c);
+		centroids.add(c);
 	}
     
 	public ArrayList<Point> getCentroids(){
-		return cc;
+		return centroids;
 	}
 	
 	public int getK() {
 		return this.k;
 	}
 	
-    public void partition(){
-    	
+    public static Clustering PARTITION(ArrayList<Point> P, ArrayList<Point> S,int k )
+    {
+    if (P.containsAll(S) && S.size()==k ) {
+      throw new IllegalArgumentException("S must have size k and be a subset of P");
+    }  
+    
+    ArrayList<Cluster> clusters =new ArrayList<Cluster> ();   
     	// for i <- 1 to k do C_i <- null
-    	for(int i = 1; i == k; i++){
-    		Cluster C = new Cluster(i);
-    		this.addCluster(C);
+    	for(int i = 0; i < k; i++){
+    		Cluster C = new Cluster();
+    		clusters.add(C);
     	}
-    	
-    	for(Point p: P){    		
+        if(k==1)return new Clustering(P,clusters,S,k);	
+    	for(Point p: P){    
+                Vector parseVector = p.parseVector();
     		// argmin computation
-    		double min = Double.MAX_VALUE;
-    		int argmin = Integer.MIN_VALUE; // l = argmin  			
-    		for(int i = 0; i <= k - 1; i++){    
+                //trovare un modo per applicare tutte le distanze in automatico,tipo un lemma tra i parametri
+    		double min = Distance.cosineDistance(parseVector,S.get(0).parseVector());
+                int argmin=0;
+    		for(int i = 1; i <= k - 1; i++){    
     			// Assuming Points = Vectors
-    			double dist = Distance.cosineDistance(Vectors.dense(this.toDoubleArray(p.getVector())), 
-    					Vectors.dense(this.toDoubleArray(cc.get(i).getVector())));		
+    			double dist = Distance.cosineDistance(parseVector,S.get(i).parseVector());		
     			if(dist < min){    				
     				min = dist;
     				argmin = i;    				
     			}   			
     		}
-    		// Cluster updating
-    		CC.get(argmin).addPoint(p);
-    	}   	
+                Cluster C=clusters.get(argmin);
+                p.setCluster(C);
+                C.addPoint(p);
+                
+    	}
+        return new Clustering(P,clusters,S,k);        
     }
     
     
@@ -85,7 +99,7 @@ public class Clustering {
 	    return randomElement;
     }
     
-    public double[] toDoubleArray(java.util.Vector v) // Una fantastica porcata
+    public static double[] toDoubleArray(java.util.Vector v) // Una fantastica porcata
     {
         double[] dd=new double[v.size()];
         for( int i=0;i<v.size();i++)
@@ -93,6 +107,15 @@ public class Clustering {
            dd[i] =(Double)v.get(i);
         }
         return dd;
+    }
+    public static java.util.Vector toVector(double[]  dd)
+    {
+        java.util.Vector v=new java.util.Vector(dd.length);
+        for( int i=0;i<dd.length;i++)
+        {
+           v.add(dd[i]);
+        }
+        return v;       
     }
     
     /*

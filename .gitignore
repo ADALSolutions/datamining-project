@@ -1,6 +1,9 @@
 .gradle
 .idea
 
+small-sample.dat.bz2
+medium-sample.dat.bz2
+
 
 ####### ECLIPSE.GITIGNORE #######
 
