@@ -1,6 +1,9 @@
 package GoalA;
 
 import java.util.ArrayList;
+import org.apache.spark.mllib.linalg.BLAS;
+import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.mllib.linalg.Vectors;
  
 public class Cluster {
 	
@@ -39,6 +42,24 @@ public class Cluster {
 	public int getId() {
 		return this.id;
 	}
+        
+        public Point calculateCentroid()
+        {
+            //se p.size==0 raise exception
+            Vector y = Vectors.zeros(P.get(0).parseVector().size());
+            for(int i=0;i<this.P.size();i++)
+            {
+                BLAS.axpy(1, P.get(i).parseVector(), y);
+            }
+            BLAS.scal(((double)1)/P.size(), y);
+            ArrayList al=new ArrayList(y.size());
+            for(int i=0;i<y.size();i++)
+            {
+                al.add(y.apply(i));
+            }           
+            return new PointCentroid(al);
+        }
+
 	
 
  
