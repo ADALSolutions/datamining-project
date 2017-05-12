@@ -20,7 +20,10 @@ public class PointCentroid<Double> extends Point<Double>
         super(v);
         this.parse=parseVector(v);
     }
-    
+    public PointCentroid(Vector v) {
+        super();//dovrei fare Clustering.toArrayList(v.toArray) ma spreca tempo e non lo uso mai quindi...
+        this.parse=v;
+    }    
     @Override
     public org.apache.spark.mllib.linalg.Vector parseVector( ArrayList a ) 
     {

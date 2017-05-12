@@ -139,6 +139,49 @@ public class ClusteringBuilder
     }
     public static void kmeansPlusPlus(Clustering primeClustering,int k)
     {
+        Point c1=primeClustering.getRandom();
+        ArrayList<Point> S=new ArrayList<Point>();
+        ArrayList<Point> P=primeClustering.getP();
+        S.add(c1);
+        P.remove(c1);
+        ArrayList<Double> dP=new ArrayList<Double>(P.size());
+        for(int i=2;i<k;i++)
+        {
+            double sum=0;
+            for(int j=0;j<P.size();j++)
+            {
+                double min=Distance.cosineDistance(P.get(j).parseVector(),S.get(0).parseVector());
+                for(int l=1;l<S.size();l++)
+                {
+                    double dist=min=Distance.cosineDistance(P.get(j).parseVector(),S.get(l).parseVector());
+                    if(dist <min)
+                    {    				
+    				min=dist; 				
+                    }  
+                }
+                dP.add(j, min);
+                sum+=Math.pow(min,2);
+            }
+            for(int j=0;j<P.size();j++)
+            {
+                dP.set(j, Math.pow(dP.get(j),2)/sum);
+            }
+            double threshold=Math.random();
+            double sum2=0;
+            for(int j=0;j<P.size();j++)
+            {
+                if(sum2>threshold)
+                {
+                    S.add(P.get(j));
+                    P.remove(P.get(j));
+                    break;
+                }
+                else
+                {
+                    sum2+=dP.get(j);
+                }
+            }            
+        }
         
     }
     public static Clustering PartitioningAroundMedoids(ArrayList<Point> P,ArrayList<Point> S,int k)

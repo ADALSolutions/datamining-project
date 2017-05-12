@@ -12,7 +12,10 @@ public abstract class Point<T> {
         this.point = p;
         this.C = C;
     }
-
+    public Point() {
+        this.point = new ArrayList<T>();
+        this.C = null;
+    }
     public Point(ArrayList<T> p) {
         this.point = p;
     }
