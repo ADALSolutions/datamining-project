@@ -40,11 +40,6 @@ public class Cluster {
 		return this.id;
 	}
 	
-	/* 
-	 	
-	public void plotCluster() {
-	}
-	
-	*/
+
  
 }

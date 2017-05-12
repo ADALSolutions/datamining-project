@@ -5,6 +5,7 @@
  */
 package GoalA;
 
+import java.util.ArrayList;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 
@@ -15,15 +16,15 @@ import org.apache.spark.mllib.linalg.Vectors;
 public class PointCentroid<Double> extends Point<Double>
 {
     org.apache.spark.mllib.linalg.Vector parse;
-    public PointCentroid(java.util.Vector v) {
+    public PointCentroid(ArrayList v) {
         super(v);
         this.parse=parseVector(v);
     }
     
     @Override
-    public org.apache.spark.mllib.linalg.Vector parseVector(java.util.Vector v) 
+    public org.apache.spark.mllib.linalg.Vector parseVector( ArrayList a ) 
     {
-        return Vectors.dense( Clustering.toDoubleArray(v));
+        return Vectors.dense( Clustering.toDoubleArray( a));
     }
     public org.apache.spark.mllib.linalg.Vector parseVector()
     {

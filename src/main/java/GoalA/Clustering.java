@@ -28,7 +28,12 @@ public class Clustering {
         this.clusters = clusters;
         this.centroids = centroids;
     }
-    
+    public Clustering( ArrayList<Point> P,int k) {
+        this.k = k;
+        this.P = P;
+        this.clusters = new ArrayList<Cluster>();
+        this.centroids = new ArrayList<Point>();
+    }    
     public void addPoint(Point p) {
 		P.add(p);
 	}
@@ -99,7 +104,7 @@ public class Clustering {
 	    return randomElement;
     }
     
-    public static double[] toDoubleArray(java.util.Vector v) // Una fantastica porcata
+    public static double[] toDoubleArray(ArrayList v) // Una fantastica porcata
     {
         double[] dd=new double[v.size()];
         for( int i=0;i<v.size();i++)
@@ -108,147 +113,102 @@ public class Clustering {
         }
         return dd;
     }
-    public static java.util.Vector toVector(double[]  dd)
+    
+    public static ArrayList toVector(double[]  dd)
     {
-        java.util.Vector v=new java.util.Vector(dd.length);
+        java.util.ArrayList v=new java.util.ArrayList(dd.length);
         for( int i=0;i<dd.length;i++)
         {
            v.add(dd[i]);
         }
         return v;       
     }
-    
-    /*
-    //Initializes the process
-    public void init() {
-    	//Create Points
-    	points = Point.createRandomPoints(MIN_COORDINATE,MAX_COORDINATE,NUM_POINTS);
-    	
-    	//Create Clusters
-    	//Set Random Centroids
-    	for (int i = 0; i &lt; NUM_CLUSTERS; i++) {
-    		Cluster cluster = new Cluster(i);
-    		Point centroid = Point.createRandomPoint(MIN_COORDINATE,MAX_COORDINATE);
-    		cluster.setCentroid(centroid);
-    		clusters.add(cluster);
-    	}
-    	
-    	//Print Initial state
-    	plotClusters();
-    }
- 
-	private void plotClusters() {
-    	for (int i = 0; i &lt; NUM_CLUSTERS; i++) {
-    		Cluster c = clusters.get(i);
-    		c.plotCluster();
-    	}
+        public void removePoint(Point p) {
+    	P.remove(p);
     }
     
-	//The process to calculate the K Means, with iterating method.
-    public void calculate() {
-        boolean finish = false;
-        int iteration = 0;
+    public Point getPoint(int i){
+    	return P.get(i);
+    }
+    
+    public void setPoints(ArrayList<Point> P){
+    	this.P = P;
+    }
+    
+
+
+    public ArrayList<Point> getP() {
+        return P;
+    }
+
+    public void setP(ArrayList<Point> P) {
+        this.P = P;
+    }
+    
+    public static Clustering FFT(ArrayList<Point> P,int k)
+    {
+            /*Clustering clustering=new Clustering( P,k);
+	    Point first = clustering.getRandom();
+            ArrayList<Point> S=clustering.getCentroids();
+	    clustering.addCentroid(first);
+	    clustering.removePoint(first);
+             */
+
+            // rimuovo i punti dal clustering in modo da tener traccia dei rimanenti P\cc
+	    // poi li riaggiungo tutti alla fine, credo sia più efficiente
+	    Point first = P.get(new Random().nextInt(P.size()));
+            ArrayList<Point> S=new  ArrayList<Point>();
+            S.add(first);
+            P.remove(first);
+	     //se p.size<k allora raise error 
+	    for(int i = 0; i <= k - 2; i++)
+            {
+    		//prendo come inizio sempre la distanza tra il primo centroide e il primo punto
+    		double max =Distance.cosineDistance(first.parseVector(),P.get(0).parseVector());
+                int argmax=0;		
+    		for(int j = 0; j <= P.size() - 1; j++)
+                {
+                    Point esamina=P.get(j);
+                    for(int l=0;l<S.size();l++)
+                    {
+    			double dist = Distance.cosineDistance(esamina.parseVector(),S.get(l).parseVector());		
+    			if(dist > max){    				
+    				max = dist;
+    				argmax = j;    				
+    			}  
+                    }
+    		}
+                S.add(P.get(argmax));
+                P.remove(argmax);
+            }
+            P.addAll(S);
+            
+            return Clustering.PARTITION(P, S, k);
+    }
+    
+	
+	public Cluster getCluster(int i){
+		return this.clusters.get(i);
+	}
         
-        // Add in new data, one at a time, recalculating centroids with each new one. 
-        while(!finish) {
-        	//Clear cluster state
-        	clearClusters();
-        	
-        	List lastCentroids = getCentroids();
-        	
-        	//Assign points to the closer cluster
-        	assignCluster();
-            
-            //Calculate new centroids.
-        	calculateCentroids();
-        	
-        	iteration++;
-        	
-        	List currentCentroids = getCentroids();
-        	
-        	//Calculates total distance between new and old Centroids
-        	double distance = 0;
-        	for(int i = 0; i &lt; lastCentroids.size(); i++) {
-        		distance += Point.distance(lastCentroids.get(i),currentCentroids.get(i));
-        	}
-        	System.out.println("#################");
-        	System.out.println("Iteration: " + iteration);
-        	System.out.println("Centroid distances: " + distance);
-        	plotClusters();
-        	        	
-        	if(distance == 0) {
-        		finish = true;
-        	}
-        }
-    }
-    
-    private void clearClusters() {
-    	for(Cluster cluster : clusters) {
-    		cluster.clear();
-    	}
-    }
-    
-    private List getCentroids() {
-    	List centroids = new ArrayList(NUM_CLUSTERS);
-    	for(Cluster cluster : clusters) {
-    		Point aux = cluster.getCentroid();
-    		Point point = new Point(aux.getX(),aux.getY());
-    		centroids.add(point);
-    	}
-    	return centroids;
-    }
-    
-    private void assignCluster() {
-        double max = Double.MAX_VALUE;
-        double min = max; 
-        int cluster = 0;                 
-        double distance = 0.0; 
+        	public void setK(int k){
+		this.k = k;
+	}
+                
+        public void setCentroids(ArrayList<Point> cc){
+		this.centroids = cc;
+	}
         
-        for(Point point : points) {
-        	min = max;
-            for(int i = 0; i &lt; NUM_CLUSTERS; i++) {
-            	Cluster c = clusters.get(i);
-                distance = Point.distance(point, c.getCentroid());
-                if(distance &lt; min){
-                    min = distance;
-                    cluster = i;
-                }
-            }
-            point.setCluster(cluster);
-            clusters.get(cluster).addPoint(point);
-        }
-    }
+        public Point getCentroid(int i){
+		return this.centroids.get(i);
+	}
+        
+        
+        public void setClusters(ArrayList<Cluster> CC){
+		this.clusters = CC;
+	}
     
-    private void calculateCentroids() {
-        for(Cluster cluster : clusters) {
-            double sumX = 0;
-            double sumY = 0;
-            List list = cluster.getPoints();
-            int n_points = list.size();
-            
-            for(Point point : list) {
-            	sumX += point.getX();
-                sumY += point.getY();
-            }
-            
-            Point centroid = cluster.getCentroid();
-            if(n_points &gt; 0) {
-            	double newX = sumX / n_points;
-            	double newY = sumY / n_points;
-                centroid.setX(newX);
-                centroid.setY(newY);
-            }
-        }
-    }
-    
-    
-    public static void main(String[] args) {
-    	
-    	KMeans kmeans = new KMeans();
-    	kmeans.init();
-    	kmeans.calculate();
-    }
-    
-    */
-    
+
+	
+
 }

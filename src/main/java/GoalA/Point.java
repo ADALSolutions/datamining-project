@@ -1,21 +1,20 @@
 package GoalA;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public abstract class Point<T> {
  
 	// Assuming Points = Vectors
-    private Vector<T> p;
+    private ArrayList<T> point;
     private Cluster C; // Optional -> a point can be identified uniquelly by the cluster it belongs to
-    org.apache.spark.mllib.linalg.Vector v;
 
-    public Point(Vector<T> p, Cluster C) {
-        this.p = p;
+    public Point(ArrayList<T> p, Cluster C) {
+        this.point = p;
         this.C = C;
     }
 
-    public Point(Vector<T> p) {
-        this.p = p;
+    public Point(ArrayList<T> p) {
+        this.point = p;
     }
     
     public void setCluster(Cluster C) {
@@ -26,19 +25,15 @@ public abstract class Point<T> {
         return this.C;
     }
     
-    public void setVector(Vector v){
-    	this.p = (Vector) v.clone();
+    public void setArrayList(ArrayList v){
+    	this.point = (ArrayList) v.clone();
     }
     
-    public Vector getVector(){
-    	return this.p;
+    public ArrayList getArrayList(){
+    	return this.point;
     }
     
-    /**
-     *
-     * @return
-     */
-    public abstract org.apache.spark.mllib.linalg.Vector parseVector(java.util.Vector v);
+    public abstract org.apache.spark.mllib.linalg.Vector parseVector(ArrayList v);
     
-    public org.apache.spark.mllib.linalg.Vector parseVector(){return this.parseVector((java.util.Vector) this.v);}
+    public org.apache.spark.mllib.linalg.Vector parseVector(){return this.parseVector((ArrayList) this.point);}
 }
