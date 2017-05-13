@@ -9,12 +9,12 @@ public class Cluster {
 	
 	public ArrayList<Point> P; // Points that belong to the Cluster
 	// Assuming Center-based Cluster
-	public Point c; // centroid
+	public Point centroid; // centroid
 	public int id; // Also this could be optional
 	
 	public Cluster(int id) {
 		this.P = new ArrayList<Point>();
-		this.c = null;
+		this.centroid = null;
 		this.id = id;
 	}
 	public Cluster() {
@@ -32,11 +32,11 @@ public class Cluster {
 	}
 	
 	public void setCentroid(Point c) {
-		this.c = c;
+		this.centroid = c;
 	}
  
 	public Point getCentroid() {
-		return this.c;
+		return this.centroid;
 	}
  
 	public int getId() {
@@ -58,6 +58,25 @@ public class Cluster {
                 al.add(y.apply(i));
             }           
             return new PointCentroid(al);
+        }
+        
+        public double averageDistance(Point p)
+        {
+            double sum=0;
+            boolean present=false;
+            double length;
+            for(int i=0;i<P.size();i++)
+            {
+                if(!p.equals(P.get(i)))
+                {
+                    
+                    sum+=Distance.cosineDistance(p.parseVector(), P.get(i).parseVector());
+                }
+                else{present=true;}
+            } 
+            if(present)length=P.size()-1;
+            else length=P.size();
+            return sum/length;
         }
 
 	
