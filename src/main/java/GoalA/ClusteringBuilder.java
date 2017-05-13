@@ -7,7 +7,9 @@ package GoalA;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.function.Function;
 import org.apache.spark.mllib.linalg.Vector;
+import org.json4s.Merge;
 
 /**
  *
@@ -258,5 +260,26 @@ public class ClusteringBuilder
            v.add(dd[i]);
         }
         return v;       
+    }
+    
+    public static Clustering hierarchicalClustering(ArrayList<Point> P,ArrayList<Point> S,int k,Function<Clustering,Boolean> f)
+    {
+        Clustering C=new Clustering(k);
+        //Creo N Clusters
+        ArrayList<Cluster> al=new ArrayList<Cluster>();
+        for(Point p:P)
+        {
+            ArrayList<Point> alp=new ArrayList<Point>();
+            alp.add(p);
+            Cluster cluster=new Cluster(alp);
+        }
+        MergingCriterion mc=new MergingCriterion(C);
+        while(!f.apply(C))
+        {
+            mc.mergeSingleLinkage();
+            
+        }
+        return C;
+        
     }
 }

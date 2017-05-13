@@ -1,6 +1,7 @@
 package GoalA;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import org.apache.spark.mllib.linalg.BLAS;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
@@ -14,7 +15,7 @@ public class Cluster {
 	
 	public Cluster(int id) {
 		this.P = new ArrayList<Point>();
-		this.centroid = null;
+		this.centroid = this.calculateCentroid();
 		this.id = id;
 	}
 	public Cluster() {
@@ -77,6 +78,25 @@ public class Cluster {
             if(present)length=P.size()-1;
             else length=P.size();
             return sum/length;
+        }
+        public double cost()
+        {
+            Point centroid=this.centroid;
+            double sum=0;
+            for(Point p:this.getPoints())
+            {
+                sum += Math.pow(Distance.cosineDistance(p.parseVector(),centroid.parseVector()),2);
+            }
+            return sum;
+        }
+        public static Cluster union(Cluster C1,Cluster C2)
+        {
+            HashSet<Point> set=new HashSet(C1.getPoints());
+            set.removeAll(C2.getPoints());
+            ArrayList<Point> al=(ArrayList<Point>) C1.getPoints().clone();
+            al.addAll(set);
+            Cluster C12=new Cluster(al);//dentro di se calcolo il centroide   
+            return C12;
         }
 
 	

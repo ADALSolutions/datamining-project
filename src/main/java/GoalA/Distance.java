@@ -71,11 +71,11 @@ public static double cosineDistance2(Vector a, Vector b)
       return Math.pow(sum,((double)1)/r);
   } 
   
-  public static double standardDistance(Vector a, Vector b,int r)
+  public static double standardDistance(Vector a, Vector b)
   {
       return euclideanDistance(a,b,2);
   }
-  public static double manhattanDistance(Vector a, Vector b,int r)
+  public static double manhattanDistance(Vector a, Vector b)
   {
       return euclideanDistance(a,b,1);
   } 
@@ -140,6 +140,9 @@ insertions that must be applied to transform X into Y .
     }
       return 2*Math.sqrt(a.size());
   }
-  
+  public static double calculateDistance(Vector a, Vector b)
+  {
+      return Distance.standardDistance(a, b);
+  }
     
 }

@@ -81,7 +81,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
     public static double SilhouetteCoefficient(Clustering C,Point p)
     {
        double ap=p.getCluster().averageDistance(p);
-       double min=-1;
+       double min=Double.MAX_VALUE;
        for(int i=0;i<C.getClusters().size();i++)
        {
            if(!p.getCluster().equals(C.getClusters().get(i)))
