@@ -6,6 +6,7 @@
 package GoalA;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.function.Function;
 import org.apache.spark.mllib.linalg.Vector;
@@ -23,13 +24,14 @@ public class ClusteringBuilder
       throw new IllegalArgumentException("S must have size k and be a subset of P");
     }  
     
-    ArrayList<Cluster> clusters =new ArrayList<Cluster> ();   
+    ArrayList<Cluster> clusters =new ArrayList<Cluster> (); 
+    HashMap<Point,Cluster> map=new HashMap<Point,Cluster> ();
     	// for i <- 1 to k do C_i <- null
     	for(int i = 0; i < k; i++){
     		Cluster C = new Cluster();
     		clusters.add(C);
     	}
-        if(k==1)return new Clustering(P,clusters,S,k);	
+        if(k==1){clusters.get(0).getPoints().addAll(P);return new Clustering(P,clusters);}	
     	for(Point p: P){    
                 Vector parseVector = p.parseVector();
     		// argmin computation
@@ -45,11 +47,11 @@ public class ClusteringBuilder
     			}   			
     		}
                 Cluster C=clusters.get(argmin);
-                p.setCluster(C);
-                C.addPoint(p);
+                map.put(p, C);
+                C.getPoints().add(p);
                 
     	}
-        return new Clustering(P,clusters,S,k);        
+        return new Clustering(P,clusters);//S centroidi        
     }
     
     public static Clustering FarthestFirstTraversal(ArrayList<Point> P,int k)
@@ -90,13 +92,13 @@ public class ClusteringBuilder
             }
             P.addAll(S);
             
-            return ClusteringBuilder.PARTITION(P, S, k);
+            return ClusteringBuilder.PARTITION(P, S,k);
     }    
     
     
     public static Clustering kmeansAlgorithm(ArrayList<Point> P,int k)
     {
-        Clustering primeClustering=new Clustering( P,k);
+        Clustering primeClustering=new Clustering(P);
         boolean stopping_condition=false;
         initRandomCentroids(primeClustering,k);
         double phi = Double.MAX_VALUE;
@@ -136,14 +138,14 @@ public class ClusteringBuilder
         for(int i = 0; i <= k - 1; i++)
         {
                 Point centroid = primeClustering.getRandom();
-                primeClustering.addCentroid(centroid);
+                primeClustering.getCentroids().add(centroid);
         }        
     }
     public static void kmeansPlusPlus(Clustering primeClustering,int k)
     {
         Point c1=primeClustering.getRandom();
         ArrayList<Point> S=new ArrayList<Point>();
-        ArrayList<Point> P=primeClustering.getP();
+        ArrayList<Point> P=primeClustering.getPoints();
         S.add(c1);
         P.remove(c1);
         ArrayList<Double> dP=new ArrayList<Double>(P.size());
@@ -252,7 +254,7 @@ public class ClusteringBuilder
         return dd;
     }
     
-    public static ArrayList toVector(double[]  dd)
+    public static ArrayList toArrayList(double[]  dd)
     {
         java.util.ArrayList v=new java.util.ArrayList(dd.length);
         for( int i=0;i<dd.length;i++)
@@ -264,7 +266,7 @@ public class ClusteringBuilder
     
     public static Clustering hierarchicalClustering(ArrayList<Point> P,ArrayList<Point> S,int k,Function<Clustering,Boolean> f)
     {
-        Clustering C=new Clustering(k);
+        Clustering C=new Clustering(P);
         //Creo N Clusters
         ArrayList<Cluster> al=new ArrayList<Cluster>();
         for(Point p:P)

@@ -80,13 +80,13 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
     //The closer sp to 1 the better.
     public static double SilhouetteCoefficient(Clustering C,Point p)
     {
-       double ap=p.getCluster().averageDistance(p);
+       double ap=C.getCluster(p).averageDistance(p);//C.getCluster(p)
        double min=Double.MAX_VALUE;
        for(int i=0;i<C.getClusters().size();i++)
        {
-           if(!p.getCluster().equals(C.getClusters().get(i)))
+           if(!C.getCluster(p).equals(C.getClusters().get(i)))
            {
-               double bp=p.getCluster().averageDistance(p);
+               double bp=C.getCluster(p).averageDistance(p);
                if(min>bp)min=bp;
            }
        }
@@ -99,11 +99,11 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
     public static double AverageSilhouetteCoefficient(Clustering C)
     {
        double sum=0;
-       for(Point p:C.getP())
+       for(Point p:C.getPoints())
        {
            sum+=Evaluation.SilhouetteCoefficient(C, p);
        }
-       return sum/C.getP().size();
+       return sum/C.getPoints().size();
     }
     
     @SuppressWarnings("empty-statement")
@@ -127,7 +127,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
             UpdatableNumber get = m_i.getOrDefault(pair.getValue(), new UpdatableNumber());
             get.add(1);
             HashMap<String,UpdatableNumber> get2 = m_C_i.getOrDefault(
-                                                      (Cluster)((Point)pair.getKey()).getCluster()
+                                                      c.getCluster((Point)pair.getKey())
                                                       ,new HashMap<String,UpdatableNumber>());
                                                       
             UpdatableNumber get3 = get2.getOrDefault(pair.getValue(), new UpdatableNumber());
