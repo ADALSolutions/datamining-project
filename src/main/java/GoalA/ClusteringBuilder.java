@@ -34,11 +34,11 @@ public class ClusteringBuilder
                 Vector parseVector = p.parseVector();
     		// argmin computation
                 //trovare un modo per applicare tutte le distanze in automatico,tipo un lemma tra i parametri
-    		double min = Distance.cosineDistance(parseVector,S.get(0).parseVector());
+    		double min = Distance.calculateDistance(parseVector,S.get(0).parseVector());
                 int argmin=0;
     		for(int i = 1; i <= k - 1; i++){    
     			// Assuming Points = Vectors
-    			double dist = Distance.cosineDistance(parseVector,S.get(i).parseVector());		
+    			double dist = Distance.calculateDistance(parseVector,S.get(i).parseVector());		
     			if(dist < min){    				
     				min = dist;
     				argmin = i;    				
@@ -71,14 +71,14 @@ public class ClusteringBuilder
 	    for(int i = 0; i <= k - 2; i++)
             {
     		//prendo come inizio sempre la distanza tra il primo centroide e il primo punto
-    		double max =Distance.cosineDistance(first.parseVector(),P.get(0).parseVector());
+    		double max =Distance.calculateDistance(first.parseVector(),P.get(0).parseVector());
                 int argmax=0;		
     		for(int j = 0; j <= P.size() - 1; j++)
                 {
                     Point esamina=P.get(j);
                     for(int l=0;l<S.size();l++)
                     {
-    			double dist = Distance.cosineDistance(esamina.parseVector(),S.get(l).parseVector());		
+    			double dist = Distance.calculateDistance(esamina.parseVector(),S.get(l).parseVector());		
     			if(dist > max){    				
     				max = dist;
     				argmax = j;    				
@@ -152,10 +152,10 @@ public class ClusteringBuilder
             double sum=0;
             for(int j=0;j<P.size();j++)
             {
-                double min=Distance.cosineDistance(P.get(j).parseVector(),S.get(0).parseVector());
+                double min=Distance.calculateDistance(P.get(j).parseVector(),S.get(0).parseVector());
                 for(int l=1;l<S.size();l++)
                 {
-                    double dist=min=Distance.cosineDistance(P.get(j).parseVector(),S.get(l).parseVector());
+                    double dist=min=Distance.calculateDistance(P.get(j).parseVector(),S.get(l).parseVector());
                     if(dist <min)
                     {    				
     				min=dist; 				

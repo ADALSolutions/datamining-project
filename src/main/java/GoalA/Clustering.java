@@ -129,7 +129,7 @@ public class Clustering {
                     Point centroid=C.getCentroid();
                     for(int l=0;l<points.size();l++)
                     {
-    			sum+=Math.pow(Distance.cosineDistance(centroid.parseVector(),points.get(l).parseVector()),2);
+    			sum+=Math.pow(Distance.calculateDistance(centroid.parseVector(),points.get(l).parseVector()),2);
                     }
     		}
                 return sum;
@@ -137,7 +137,7 @@ public class Clustering {
         public double kcenter()
         {
             
-    		double max =Distance.cosineDistance(this.clusters.get(0).getCentroid().parseVector(),
+    		double max =Distance.calculateDistance(this.clusters.get(0).getCentroid().parseVector(),
                         this.clusters.get(0).getPoints().get(0).parseVector());
     		for(int j = 0; j <= this.clusters.size() - 1; j++)
                 {
@@ -147,7 +147,7 @@ public class Clustering {
                     Point centroid=C.getCentroid();
                     for(int l=0;l<points.size();l++)
                     {
-    			double dist=Distance.cosineDistance(centroid.parseVector(),points.get(l).parseVector());
+    			double dist=Distance.calculateDistance(centroid.parseVector(),points.get(l).parseVector());
  			if(dist > max){    				
     				max = dist;    				
     			}                                
@@ -167,7 +167,7 @@ public class Clustering {
                     Point centroid=C.getCentroid();
                     for(int l=0;l<points.size();l++)
                     {
-    			sum+=Distance.cosineDistance(centroid.parseVector(),points.get(l).parseVector());
+    			sum+=Distance.calculateDistance(centroid.parseVector(),points.get(l).parseVector());
                     }
     		}
                 return sum;

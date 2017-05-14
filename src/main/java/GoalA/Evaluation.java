@@ -49,12 +49,12 @@ public class Evaluation
         {
             Point x=sample.get(i);
             Point y=generated.get(i);
-            double minw=Distance.cosineDistance(P.get(0).parseVector(),x.parseVector());
-            double minu=Distance.cosineDistance(P.get(0).parseVector(),y.parseVector());
+            double minw=Distance.calculateDistance(P.get(0).parseVector(),x.parseVector());
+            double minu=Distance.calculateDistance(P.get(0).parseVector(),y.parseVector());
             for(int j=1;j<P.size();j++)
             {
-                double distw=Distance.cosineDistance(P.get(j).parseVector(),x.parseVector());
-                double distu=Distance.cosineDistance(P.get(j).parseVector(),y.parseVector());
+                double distw=Distance.calculateDistance(P.get(j).parseVector(),x.parseVector());
+                double distu=Distance.calculateDistance(P.get(j).parseVector(),y.parseVector());
                 if(distw<minw)minw=distw;
                 if(distu<minu)minu=distu;
             }

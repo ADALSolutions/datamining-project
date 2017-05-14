@@ -71,7 +71,7 @@ public class Cluster {
                 if(!p.equals(P.get(i)))
                 {
                     
-                    sum+=Distance.cosineDistance(p.parseVector(), P.get(i).parseVector());
+                    sum+=Distance.calculateDistance(p.parseVector(), P.get(i).parseVector());
                 }
                 else{present=true;}
             } 
@@ -85,7 +85,7 @@ public class Cluster {
             double sum=0;
             for(Point p:this.getPoints())
             {
-                sum += Math.pow(Distance.cosineDistance(p.parseVector(),centroid.parseVector()),2);
+                sum += Math.pow(Distance.calculateDistance(p.parseVector(),centroid.parseVector()),2);
             }
             return sum;
         }

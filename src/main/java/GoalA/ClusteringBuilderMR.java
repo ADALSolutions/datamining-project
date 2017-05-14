@@ -11,5 +11,5 @@ package GoalA;
  */
 public class ClusteringBuilderMR 
 {
-    
+
 }
