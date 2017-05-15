@@ -16,9 +16,11 @@ public class UpdatableNumber
     public UpdatableNumber(double number) {
         this.number = number;
     }
+    
     public UpdatableNumber() {
         this(0);
     }
+    
     public double getNumber() {
         return number;
     }
@@ -26,6 +28,9 @@ public class UpdatableNumber
     public void setNumber(double number) {
         this.number = number;
     }
-    public void add(double a){number+=a;}
+    
+    public void add(double a) {
+    	number += a;
+    }
     
 }

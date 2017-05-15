@@ -10,20 +10,22 @@ public abstract class Point<T> {
     public Point(ArrayList<T> p) {
         this.point = p;
     }
+    
     public Point() {
         this.point = new ArrayList<T>();
     }
     
-    
-    public void setArrayList(ArrayList v){
+    public void setArrayList(ArrayList v) {
     	this.point = (ArrayList) v.clone();
     }
     
-    public ArrayList getArrayList(){
+    public ArrayList getArrayList() {
     	return this.point;
     }
     
     public abstract org.apache.spark.mllib.linalg.Vector parseVector(ArrayList v);
     
-    public org.apache.spark.mllib.linalg.Vector parseVector(){return this.parseVector((ArrayList) this.point);}
+    public org.apache.spark.mllib.linalg.Vector parseVector() {
+    	return this.parseVector((ArrayList) this.point);
+    }
 }
