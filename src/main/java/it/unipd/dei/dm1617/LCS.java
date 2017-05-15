@@ -1,5 +1,5 @@
 
-package GoalA;
+package it.unipd.dei.dm1617;
 
 /**
   * This is an implementation, in Java, of the Longest Common Subsequence algorithm.

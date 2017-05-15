@@ -1,4 +1,4 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;

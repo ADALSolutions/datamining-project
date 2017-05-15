@@ -1,4 +1,4 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import java.util.ArrayList;
 import java.util.HashSet;

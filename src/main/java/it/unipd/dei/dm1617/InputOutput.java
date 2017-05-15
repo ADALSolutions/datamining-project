@@ -1,4 +1,4 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;

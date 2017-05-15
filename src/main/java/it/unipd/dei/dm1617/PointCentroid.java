@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import java.util.ArrayList;
 import org.apache.spark.mllib.linalg.Vector;

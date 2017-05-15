@@ -1,4 +1,4 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import org.apache.spark.sql.Encoder;
 import org.apache.spark.sql.Encoders;

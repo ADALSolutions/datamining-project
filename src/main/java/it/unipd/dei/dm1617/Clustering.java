@@ -1,6 +1,6 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
-import GoalA.Distance;
+import it.unipd.dei.dm1617.Distance;
 
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;

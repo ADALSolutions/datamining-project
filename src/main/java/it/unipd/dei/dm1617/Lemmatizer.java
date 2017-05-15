@@ -1,4 +1,4 @@
-package GoalA;
+package it.unipd.dei.dm1617;
 
 import edu.stanford.nlp.simple.Document;
 import edu.stanford.nlp.simple.Sentence;
