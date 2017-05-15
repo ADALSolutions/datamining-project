@@ -32,34 +32,7 @@ public class Lemmatizer {
   /**
    * Transform a single document in the sequence of its lemmas.
    */
-  
-  public static Iterable<String> lemmatize(String doc) {
-	    Document d = new Document(doc.toLowerCase());
-	    // Count spaces to allocate the vector to the right size and avoid trashing memory
-	    int numSpaces = 0;
-	    for (int i = 0; i < doc.length(); i++) {
-	      if (doc.charAt(i) == ' ') {
-	        numSpaces++;
-	      }
-	    }
-	    ArrayList<String> lemmas = new ArrayList<>(numSpaces);
-	      
-	    for (Sentence sentence : d.sentences()) {
-	      for (String lemma : sentence.lemmas()) {
-	        // Remove symbols
-	        if (!symbols.matcher(lemma).matches() && !specialTokens.contains(lemma)) {
-	          lemmas.add(lemma);
-	        }
-	      }
-	    }
-
-	    return lemmas;
-  }
-  
-  /*
-    
-    public static ArrayList<String> lemmatize(String doc) {
-   
+  public static ArrayList<String> lemmatize(String doc) {
     Document d = new Document(doc.toLowerCase());
     // Count spaces to allocate the vector to the right size and avoid trashing memory
     int numSpaces = 0;
@@ -81,44 +54,20 @@ public class Lemmatizer {
 
     return lemmas;
   }
-  
-  */
 
   /**
    * Transform an RDD of strings in the corresponding RDD of lemma
    * sequences, with one sequence for each original document.
    */
-  public static JavaRDD<Iterable<String>> lemmatize(JavaRDD<String> docs) {
-	    return docs.map((d) -> lemmatize(d));
-	  }
-  
-  /*
-  
   public static JavaRDD<ArrayList<String>> lemmatize(JavaRDD<String> docs) {
     return docs.map((d) -> lemmatize(d));
   }
-  
-  */
 
   /**
    * Transform an RDD of WikiPage objects into an RDD of WikiPage
    * objects with the text replaced by the concatenation of the lemmas
    * in each page.
    */
-  public static JavaRDD<WikiPage> lemmatizeWikiPages(JavaRDD<WikiPage> docs) {
-	    return docs.map((wp) -> {
-	      Iterable<String> lemmas = lemmatize(wp.getText());
-	      StringBuilder newText = new StringBuilder();
-	      for(String lemma : lemmas) {
-	        newText.append(lemma).append(' ');
-	      }
-	      wp.setText(newText.toString());
-	      return wp;
-	    });
-	  }
-  
-  /*
-  
   public static JavaRDD<WikiPage> lemmatizeWikiPages(JavaRDD<WikiPage> docs) {
     return docs.map((wp) -> {
       ArrayList<String> lemmas = lemmatize(wp.getText());
@@ -130,8 +79,6 @@ public class Lemmatizer {
       return wp;
     });
   }
-  
-  */
 
   public static void main(String[] args) {
     System.out.println(lemmatize("This is a sentence. This is another. The whole thing is a document made of sentences."));
