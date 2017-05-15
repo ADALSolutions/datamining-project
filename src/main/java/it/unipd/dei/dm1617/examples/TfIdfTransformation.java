@@ -1,10 +1,10 @@
 package it.unipd.dei.dm1617.examples;
 
-import it.unipd.dei.dm1617.Distance;
 import it.unipd.dei.dm1617.Lemmatizer;
+import it.unipd.dei.dm1617.CountVectorizer;
+import it.unipd.dei.dm1617.Distance;
 import it.unipd.dei.dm1617.WikiPage;
 import it.unipd.dei.dm1617.InputOutput;
-import it.unipd.dei.dm1617.CountVectorizer;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
