@@ -1,9 +1,9 @@
-package GoalA.examples;
+package it.unipd.dei.dm1617.examples;
 
 import java.util.Properties;
 
-import GoalA.InputOutput;
-import GoalA.WikiPage;
+import it.unipd.dei.dm1617.InputOutput;
+import it.unipd.dei.dm1617.WikiPage;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
