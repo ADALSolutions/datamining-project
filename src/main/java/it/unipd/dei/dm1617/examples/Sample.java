@@ -1,5 +1,7 @@
 package it.unipd.dei.dm1617.examples;
 
+import java.util.Properties;
+
 import it.unipd.dei.dm1617.InputOutput;
 import it.unipd.dei.dm1617.WikiPage;
 import org.apache.spark.SparkConf;
@@ -13,12 +15,15 @@ import org.apache.spark.api.java.JavaSparkContext;
 public class Sample {
 
   public static void main(String[] args) {
-    String inputPath = args[0];
-    String outputPath = args[1];
-    double fraction = Double.parseDouble(args[2]);
+	 
+	System.setProperty("hadoop.home.dir", "C:\\Users\\alvis\\Desktop\\Data Mining\\Progetto\\Project");
+	
+	String inputPath = "C:\\Users\\alvis\\Desktop\\Data Mining\\Progetto\\Dataset\\medium-sample.dat.bz2";
+    String outputPath = "C:\\Users\\alvis\\Desktop\\Data Mining\\Progetto\\Dataset\\output-medium-sample";
+    double fraction = 0.1;
 
     // The usual Spark setup
-    SparkConf conf = new SparkConf(true).setAppName("Sampler");
+    SparkConf conf = new SparkConf(true).setAppName("Sampler").setMaster("local");
     JavaSparkContext sc = new JavaSparkContext(conf);
 
     // Read the pages from the path provided as the first argument.

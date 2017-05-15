@@ -32,7 +32,7 @@ public class Lemmatizer {
   /**
    * Transform a single document in the sequence of its lemmas.
    */
-  public static Iterable<String> lemmatize(String doc) {
+  public static ArrayList<String> lemmatize(String doc) {
     Document d = new Document(doc.toLowerCase());
     // Count spaces to allocate the vector to the right size and avoid trashing memory
     int numSpaces = 0;
@@ -42,7 +42,7 @@ public class Lemmatizer {
       }
     }
     ArrayList<String> lemmas = new ArrayList<>(numSpaces);
-      
+
     for (Sentence sentence : d.sentences()) {
       for (String lemma : sentence.lemmas()) {
         // Remove symbols
@@ -59,7 +59,7 @@ public class Lemmatizer {
    * Transform an RDD of strings in the corresponding RDD of lemma
    * sequences, with one sequence for each original document.
    */
-  public static JavaRDD<Iterable<String>> lemmatize(JavaRDD<String> docs) {
+  public static JavaRDD<ArrayList<String>> lemmatize(JavaRDD<String> docs) {
     return docs.map((d) -> lemmatize(d));
   }
 
@@ -70,7 +70,7 @@ public class Lemmatizer {
    */
   public static JavaRDD<WikiPage> lemmatizeWikiPages(JavaRDD<WikiPage> docs) {
     return docs.map((wp) -> {
-      Iterable<String> lemmas = lemmatize(wp.getText());
+      ArrayList<String> lemmas = lemmatize(wp.getText());
       StringBuilder newText = new StringBuilder();
       for(String lemma : lemmas) {
         newText.append(lemma).append(' ');

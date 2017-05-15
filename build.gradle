@@ -10,7 +10,7 @@ apply plugin: 'application'
 
 sourceCompatibility = 1.8
 
-mainClassName = "it.unipd.dei.dm1617.examples.TfIdfTransformation"
+mainClassName = "GoalA.examples.Test"
 applicationDefaultJvmArgs = ["-Dspark.master=local"]
 
 jar {
