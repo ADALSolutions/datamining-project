@@ -31,6 +31,7 @@ public class ClusteringBuilder implements Serializable {
     	// for i <- 1 to k do C_i <- null
     	for(int i = 0; i < k; i++){
     		Cluster C = new Cluster();
+    		C.setCenter(S.get(i));
     		clusters.add(C);
     	}
         if(k==1){clusters.get(0).getPoints().addAll(P);return new Clustering(P,clusters,S);}	
@@ -185,11 +186,8 @@ public class ClusteringBuilder implements Serializable {
     	return ClusteringBuilder.kmeansAlgorithm(primeClustering.getPoints(), primeClustering.getCenters(), k);
     }
     
-    public static Clustering PartitioningAroundMedoids(ArrayList<Point> P, int k) {
-    	Clustering C_init = new Clustering(P);
-    	initRandomCentroids(C_init,k);
-    	ArrayList<Point> S = C_init.getCenters();
-        C_init = ClusteringBuilder.Partition(P, S, k);
+    public static Clustering PartitioningAroundMedoids(ArrayList<Point> P, ArrayList<Point> S, int k) {
+        Clustering C_init = ClusteringBuilder.Partition(P, S, k);
         boolean stopping_condition = false;       
         while (!stopping_condition) {
             stopping_condition = true;
@@ -266,7 +264,8 @@ public class ClusteringBuilder implements Serializable {
     		return kmeansPlusPlusAlgorithm(C, k);
     	}
     	else if (algorithm.equals("kmedian")){
-    		return PartitioningAroundMedoids(P, k);
+    		ArrayList<Point> S = ClusteringBuilder.initRandomCentroids(P, k);
+    		return PartitioningAroundMedoids(P, S, k);
     	}
     	else if (algorithm.equals("hierarchical") && f != null){
     		return hierarchicalClustering(P, k, f);
