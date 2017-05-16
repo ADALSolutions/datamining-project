@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.apache.spark.mllib.linalg.Vector;
 import org.json4s.Merge;
@@ -235,7 +236,7 @@ public class ClusteringBuilder implements Serializable {
         return v;       
     }
     
-    public static Clustering hierarchicalClustering(ArrayList<Point> P, int k, Function<Clustering, Boolean> f) {
+    public static Clustering hierarchicalClustering(ArrayList<Point> P, int k, BiFunction<Clustering,Clustering, Boolean> f) {
         Clustering C = new Clustering(P);
         //Creo N Clusters
         ArrayList<Cluster> al = new ArrayList<Cluster>();
@@ -245,13 +246,13 @@ public class ClusteringBuilder implements Serializable {
             Cluster cluster = new Cluster(alp);
         }
         MergingCriterion mc = new MergingCriterion(C);
-        while(!f.apply(C)) {
+        while(!f.apply(C, null)) { //ops
             mc.mergeSingleLinkage();
         }
         return C;
     }
     
-    public static Clustering clusteringAlgorithm(ArrayList<Point> P, int k, Function<Clustering, Boolean> f, String algorithm) {
+    public static Clustering clusteringAlgorithm(ArrayList<Point> P, int k, BiFunction<Clustering,Clustering, Boolean> f, String algorithm) {
     	if (algorithm.equals("kcenter")){
     		return FarthestFirstTraversal(P,k);
     	}
@@ -273,39 +274,35 @@ public class ClusteringBuilder implements Serializable {
     	return null;
     }
     
-    public static Clustering bestkClustering(ArrayList<Point> P, String algorithm, Function<Clustering, Boolean> f, double threshold) {
+    public static Clustering bestkClustering(ArrayList<Point> P, String algorithm, BiFunction<Clustering,Clustering, Boolean> f) {
     	int k=1;
     	Clustering C = ClusteringBuilder.clusteringAlgorithm(P, k, f, algorithm);
+    	double phikprime=C.objectiveFunction(algorithm);
     	//algorithm == objective function
-    	double objfun = C.objectiveFunction(algorithm);
     	k=2;
-    	C = ClusteringBuilder.clusteringAlgorithm(P, k, f, algorithm);
-    	double objfun2 = C.objectiveFunction(algorithm);
-    	while (objfun2 - objfun > threshold) {
-    		objfun = objfun2;
+    	Clustering C2 = ClusteringBuilder.clusteringAlgorithm(P, k, f, algorithm);
+    	while (f.apply(C, C2)) {
+    		C = C2;
     		k=k*2;
-    		C = ClusteringBuilder.clusteringAlgorithm(P, k, f, algorithm);
-    		objfun2 = C.objectiveFunction(algorithm);
+    		phikprime=C.objectiveFunction(algorithm);
+    		C2 = ClusteringBuilder.clusteringAlgorithm(P, k, f, algorithm);
     	}   
     	// search refinement
     	int kprime = k/2; 
-    	int i = 1;
-    	Clustering Cprime = ClusteringBuilder.clusteringAlgorithm(P, kprime, f, algorithm);
-    	double objfunPrime = Cprime.objectiveFunction(algorithm);
-    	kprime = kprime+i;
-    	Cprime = ClusteringBuilder.clusteringAlgorithm(P, kprime, f, algorithm);
-    	double objfunPrime2 = Cprime.objectiveFunction(algorithm);
-    	while (objfunPrime2 - objfunPrime > threshold && kprime < k) {
-    		objfunPrime = objfunPrime2;
-    		kprime = kprime+i;
-    		i = i*2;
-    		Cprime = ClusteringBuilder.clusteringAlgorithm(P, kprime, f, algorithm);
-    		objfunPrime2 = Cprime.objectiveFunction(algorithm);
-    	}
-    	if (objfun2 > objfunPrime2){
-    		return Cprime;
-    	}
-    	return C;
+    	return bisection(C, C2, kprime,k,phikprime,C2.objectiveFunction(algorithm),algorithm,f);
+    	
+    }
+    public static Clustering bisection(Clustering C, Clustering C2, int kprime,int k,double phikprime,double phik,String algorithm,BiFunction<Clustering,Clustering, Boolean> f)
+    {
+		int kmedio = (int) (kprime + k)/2;
+		if(kmedio==kprime)return C2;
+		Clustering Cmedio = ClusteringBuilder.clusteringAlgorithm(C.getPoints(), kmedio, f, algorithm);
+		double phikmedio = Cmedio.objectiveFunction(algorithm);
+    		
+    		if(f.apply(Cmedio, C2))
+    			return bisection(Cmedio, C2, kmedio, k, phikmedio, phik, algorithm, f);
+    		else
+    			return bisection(C, Cmedio, kprime, kmedio, phikprime, phikmedio, algorithm, f);
     }
     
 }
