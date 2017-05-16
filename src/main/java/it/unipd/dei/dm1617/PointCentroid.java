@@ -36,4 +36,6 @@ public class PointCentroid<Double> extends Point<Double>
         return parse;
     }    
     
+    
+    
 }
