@@ -6,6 +6,7 @@
 package it.unipd.dei.dm1617;
 
 import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.function.Function;
@@ -16,43 +17,43 @@ import org.json4s.Merge;
  *
  * @author DavideDP
  */
-public class ClusteringBuilder {
+public class ClusteringBuilder implements Serializable {
 	
-    public static Clustering PARTITION(ArrayList<Point> P, ArrayList<Point> S, int k) {
-	   if (P.containsAll(S) && S.size() == k ) {
-	      throw new IllegalArgumentException("S must have size k and be a subset of P");
-	   }  
+	public static Clustering Partition(ArrayList<Point> P, ArrayList<Point> S,int k )
+    {
+    if ( (S.size()==k )) {}
+    else{
+      throw new IllegalArgumentException("S must have size k ");
+    }  
     
-	   ArrayList<Cluster> clusters = new ArrayList<Cluster> (); 
-	   HashMap<Point, Cluster> map = new HashMap<Point, Cluster> ();
-	    	// for i <- 1 to k do C_i <- null
-	   for(int i = 0; i < k; i++){
-	      Cluster C = new Cluster();
-	      clusters.add(C);
-	   }
-       if(k == 1){
-    	   clusters.get(0).getPoints().addAll(P);
-    	   return new Clustering(P, clusters);
-       }	
-       for(Point p : P){    
-           Vector parseVector = p.parseVector();
-    	   // argmin computation
-           //trovare un modo per applicare tutte le distanze in automatico,tipo un lemma tra i parametri
-    	   double min = Distance.calculateDistance(parseVector, S.get(0).parseVector(), "standard");
-           int argmin = 0;
-    	   for(int i = 1; i <= k - 1; i++){    
-    		  // Assuming Points = Vectors
-    		  double dist = Distance.calculateDistance(parseVector, S.get(i).parseVector(), "standard");		
-    		  if(dist < min){    				
+    ArrayList<Cluster> clusters =new ArrayList<Cluster> (); 
+    HashMap<Point,Cluster> map=new HashMap<Point,Cluster> ();
+    	// for i <- 1 to k do C_i <- null
+    	for(int i = 0; i < k; i++){
+    		Cluster C = new Cluster();
+    		clusters.add(C);
+    	}
+        if(k==1){clusters.get(0).getPoints().addAll(P);return new Clustering(P,clusters,S);}	
+    	for(Point p: P){    
+                Vector parseVector = p.parseVector();
+    		// argmin computation
+                //trovare un modo per applicare tutte le distanze in automatico,tipo un lemma tra i parametri
+    		double min = Distance.calculateDistance(parseVector,S.get(0).parseVector(), "standard");
+                int argmin=0;
+    		for(int i = 1; i <= k - 1; i++){    
+    			// Assuming Points = Vectors
+    			double dist = Distance.calculateDistance(parseVector,S.get(i).parseVector(), "standard");		
+    			if(dist < min){    				
     				min = dist;
     				argmin = i;    				
-    		  }   			
-    	   }
-           Cluster C = clusters.get(argmin);
-           map.put(p, C);
-           C.getPoints().add(p);     
+    			}   			
+    		}
+                Cluster C=clusters.get(argmin);
+                map.put(p, C);
+                C.getPoints().add(p);
+                
     	}
-        return new Clustering(P, clusters);//S centroidi        
+        return new Clustering(P,clusters,S);//S centroidi        
     }
     
     public static Clustering FarthestFirstTraversal(ArrayList<Point> P, int k) {
@@ -88,47 +89,57 @@ public class ClusteringBuilder {
     		P.remove(argmax);
         }
         P.addAll(S);          
-        return ClusteringBuilder.PARTITION(P, S, k);
+        return ClusteringBuilder.Partition(P, S, k);
     }    
     
-    public static Clustering kmeansAlgorithm(ArrayList<Point> P, int k) {
-        Clustering primeClustering = new Clustering(P);
-        boolean stopping_condition = false;
-        initRandomCentroids(primeClustering, k);
-        double phi = Double.MAX_VALUE; 
+    public static Clustering kmeansAlgorithm(ArrayList<Point> P,ArrayList<Point> S,int k)
+    {
+        Clustering primeClustering=new Clustering(P);
+        boolean stopping_condition=false;
+        double phi = Double.MAX_VALUE;
         boolean stoppingCondition = false;
-        while (!stoppingCondition) {
-            primeClustering = ClusteringBuilder.PARTITION(P, primeClustering.getCentroids(), k);
-            ArrayList<Cluster> clusters = primeClustering.getClusters();
-            ArrayList<Point> primeCentroids = new  ArrayList<Point>();
-            //N.B quando aggiorno i centroidi dei cluster non aggiorno in automatico la lista dei centroidi di Clustering,
-            //ma lo faccio in un secondo momento con primeCentroids
-            for(int i = 0; i <= clusters.size() - 1; i++) {
-                Point centroid = clusters.get(i).calculateCentroid();
-                clusters.get(i).setCentroid(centroid);
-                primeCentroids.add(centroid);
+        
+        while (!stoppingCondition)
+        {
+            primeClustering = ClusteringBuilder.Partition(P, S, k);
+            primeClustering.getCenters();//Aggiorna i centroidi
+            
+            double phikmeans=primeClustering.kmeans();
+            if( phi> phikmeans)
+            {
+                phi=phikmeans;
             }
-            double phikmeans = primeClustering.objectiveFunction("kmeans");
-            if( phi > phikmeans) {
-                phi = phikmeans;
-                primeClustering.setCentroids(primeCentroids);
-            }
-            else {
+            else
+            {
                 stoppingCondition = true;
             }
         }
         return primeClustering;
+        
     }
     
     //scrive nuovi centroidi dentro al clustering
     public static void initRandomCentroids(Clustering primeClustering, int k) {
         for(int i = 0; i <= k - 1; i++) {
                 Point centroid = primeClustering.getRandom();
-                primeClustering.getCentroids().add(centroid);
+                primeClustering.getCenters().add(centroid);
         }        
     }
     
-    public static void kmeansPlusPlus(Clustering primeClustering, int k) {
+    public static ArrayList<Point> initRandomCentroids(ArrayList<Point> P,int k)
+    {
+        ArrayList<Point> S=new ArrayList<Point>();
+        Random r=new Random();
+        for(int i = 0; i <= k - 1; i++)
+        {
+                int index=r.nextInt(P.size());
+                S.add(P.get(index));
+                
+        }   
+        return S;
+    } 
+    
+    public static ArrayList<Point> kmeansPlusPlus(Clustering primeClustering, int k) {
         Point c1 = primeClustering.getRandom();
         ArrayList<Point> S = new ArrayList<Point>();
         ArrayList<Point> P = primeClustering.getPoints();
@@ -165,13 +176,20 @@ public class ClusteringBuilder {
                 }
             }            
         }
+        return primeClustering.getCenters();
+    }
+    
+    public static Clustering kmeansPlusPlusAlgorithm(Clustering primeClustering, int k)
+    {
+    	ClusteringBuilder.kmeansPlusPlus(primeClustering,k);
+    	return ClusteringBuilder.kmeansAlgorithm(primeClustering.getPoints(), primeClustering.getCenters(), k);
     }
     
     public static Clustering PartitioningAroundMedoids(ArrayList<Point> P, int k) {
     	Clustering C_init = new Clustering(P);
     	initRandomCentroids(C_init,k);
-    	ArrayList<Point> S = C_init.getCentroids();
-        C_init = ClusteringBuilder.PARTITION(P, S, k);
+    	ArrayList<Point> S = C_init.getCenters();
+        C_init = ClusteringBuilder.Partition(P, S, k);
         boolean stopping_condition = false;       
         while (!stopping_condition) {
             stopping_condition = true;
@@ -188,7 +206,7 @@ public class ClusteringBuilder {
                     Sprimo.remove(c);
                     Sprimo.add(p);
                     P.addAll(S);
-                    Clustering Cprimo = ClusteringBuilder.PARTITION(P, Sprimo, k);
+                    Clustering Cprimo = ClusteringBuilder.Partition(P, Sprimo, k);
                     double phimedianPrimo = Cprimo.objectiveFunction("kmedian");
                     double phimedian = C_init.objectiveFunction("kmedian");
                     if (phimedianPrimo < phimedian) {
@@ -240,7 +258,12 @@ public class ClusteringBuilder {
     		return FarthestFirstTraversal(P,k);
     	}
     	else if (algorithm.equals("kmeans")){
-    		return kmeansAlgorithm(P, k);
+    		ArrayList<Point> S = ClusteringBuilder.initRandomCentroids(P, k);
+    		return kmeansAlgorithm(P, S, k);
+    	}
+    	else if (algorithm.equals("kmeansPlusPlus")){
+    		Clustering C = new Clustering(P);
+    		return kmeansPlusPlusAlgorithm(C, k);
     	}
     	else if (algorithm.equals("kmedian")){
     		return PartitioningAroundMedoids(P, k);

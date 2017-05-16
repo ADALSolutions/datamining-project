@@ -8,52 +8,52 @@ import org.apache.spark.mllib.linalg.Vectors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.io.Serializable;
 import java.util.Random;
 
-public class Clustering 
+public class Clustering implements Serializable
 {
 	
     private ArrayList<Point> P; // Points that belong to the clustering
     private ArrayList<Cluster> clusters; // Clusters that belong to the clustering
-    private ArrayList<Point> centroids;
+    private ArrayList<Point> centers;
     private HashMap<Point, Cluster> map;
-    public boolean editCentroids = true;
 
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, HashMap<Point, Cluster> map, ArrayList<Point> centroids) {
         this.P = P;
         this.clusters = clusters;
         this.map = map;
-        this.centroids = centroids;
+        this.centers = centroids;
     }   
     
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, HashMap<Point, Cluster> map) {
         this.P = P;
         this.clusters = clusters;
         this.map = map;
-        this.centroids = this.getCentroids();
+        this.centers = this.getCenters();
     }    
     
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, ArrayList<Point> centroids) {
         this.P = P;
         this.clusters = clusters;
         this.map = this.init(clusters);
-        this.centroids = this.getCentroids();
-        this.centroids = centroids;
+        this.centers = this.getCenters();
+        this.centers = centroids;
     }
     
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters) {
         this.P = P;
         this.clusters = clusters;
         this.map = this.init(clusters);
-        this.centroids = this.getCentroids();
-        this.centroids = this.getCentroids();
+        this.centers = this.getCenters();
+        this.centers = this.getCenters();
     }
     
     public Clustering(ArrayList<Point> P) {
         this.P = P;
         this.clusters = new ArrayList<Cluster>();
         this.map = this.init(clusters);
-        this.centroids = this.getCentroids();
+        this.centers = this.getCenters();
     }    
     
     public ArrayList<Point> getPoints() {
@@ -68,17 +68,20 @@ public class Clustering
         return map.get(p);
     } 
     
-    public ArrayList<Point> getCentroids() {
-        if(this.editCentroids) {
-            ArrayList<Point> centroids=new ArrayList<Point>();
-            for(Cluster c : clusters) {
-                centroids.add(c.getCentroid());
-            }
-            return centroids;
+    public ArrayList<Point> getCenters() {
+        ArrayList<Point> centroids=new ArrayList<Point>();
+        for(Cluster c : clusters) {
+            centroids.add(c.getCenter());
         }
-        else {
-            return centroids;
+        return centroids;        
+    }
+    
+    public ArrayList<Point> getCentroids(){
+    	ArrayList<Point> centroids=new ArrayList<Point>();
+        for(Cluster c : clusters) {
+            centroids.add(c.calculateCentroid());
         }
+        return centroids; 
     }
 
     public int getK() {
@@ -100,7 +103,6 @@ public class Clustering
             P.add(p);
             map.put(p, c);
             c.getPoints().add(p);
-            c.setEdit(true);
             return true;
         }
         else {
@@ -130,7 +132,6 @@ public class Clustering
     	P.remove(p);
         Cluster cl = map.get(p);
         cl.getPoints().remove(p);
-        cl.setEdit(true);
         map.remove(p);
     }
     
@@ -140,7 +141,7 @@ public class Clustering
         for(int j = 0; j <= this.clusters.size() - 1; j++) {
             Cluster C = this.clusters.get(j);
             ArrayList<Point> points = C.getPoints();
-            Point centroid = C.getCentroid();
+            Point centroid = C.getCenter();
             for(int l = 0; l < points.size(); l++) {
                 sum += Math.pow(Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard"), 2);
             }
@@ -149,12 +150,12 @@ public class Clustering
     }
     
     public double kcenter() {
-        double max = Distance.calculateDistance(this.clusters.get(0).getCentroid().parseVector(),
+        double max = Distance.calculateDistance(this.clusters.get(0).getCenter().parseVector(),
                 this.clusters.get(0).getPoints().get(0).parseVector(), "standard");
         for(int j = 0; j <= this.clusters.size() - 1; j++) {
             Cluster C = this.clusters.get(j);
             ArrayList<Point> points = C.getPoints();
-            Point centroid = C.getCentroid();
+            Point centroid = C.getCenter();
             for(int l = 0; l < points.size(); l++) {
                 double dist = Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard");
                 if(dist > max){    				
@@ -170,7 +171,7 @@ public class Clustering
         for(int j = 0; j <= this.clusters.size() - 1; j++) {
             Cluster C = this.clusters.get(j);
             ArrayList<Point> points = C.getPoints();
-            Point centroid = C.getCentroid();
+            Point centroid = C.getCenter();
             for(int l = 0; l < points.size(); l++) {
                 sum += Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard");
             }
@@ -207,10 +208,14 @@ public class Clustering
         this.map = init(clusters);
     }    
     
-    public void setCentroids(ArrayList<Point> centroids)
+    
+    //  clusters must be passed ordered
+    public void setCenters(HashMap<Cluster,Point> mapCenters)
     {
-        this.editCentroids = false;
-        this.centroids = centroids;  
+    	for(Cluster c:mapCenters.keySet()){
+    		c.setCenter(mapCenters.get(c));
+    		
+    	}
     }
 
 }
