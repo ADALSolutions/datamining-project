@@ -40,7 +40,7 @@ public class TfIdfTransformation {
     // Get the lemmas. It's better to cache this RDD since the
     // following operation, lemmatization, will go through it two
     // times.
-    JavaRDD<ArrayList<String>> lemmas = Lemmatizer.lemmatize(texts).cache();
+    JavaRDD<Iterable<String>> lemmas = Lemmatizer.lemmatize(texts).cache();
 
     // Transform the sequence of lemmas in vectors of counts in a
     // space of 100 dimensions, using the 100 top lemmas as the vocabulary.
@@ -79,7 +79,7 @@ public class TfIdfTransformation {
 
     // Finally, we print the distance between the first two pages
     List<Tuple2<WikiPage, Vector>> firstPages = pagesAndVectors.take(2);
-    double dist = Distance.calculateDistance(firstPages.get(0)._2(), firstPages.get(1)._2());
+    double dist = Distance.calculateDistance(firstPages.get(0)._2(), firstPages.get(1)._2(),"kcenter");
     
 	
 	
