@@ -62,7 +62,7 @@ public class Sample1 {
     //Trovare d-bound
     pages = pages.sample(false, fraction);   
     JavaRDD<String> texts = pages.map((p) -> p.getText());
-    JavaRDD<ArrayList<String>> lemmas = Lemmatizer.lemmatize(texts).cache();
+    JavaRDD<Iterable<String>> lemmas = Lemmatizer.lemmatize(texts).cache();
     //Once time InputOutput.write(sample, outputPath);
       //Encoder<ArrayList> personEncoder = Encoders.bean( ArrayList.class);
       //Dataset<ArrayList> javaBeanDS = SparkSession.builder().getOrCreate().createDataset((ArrayList)lemmas.collect(), personEncoder);      
@@ -80,19 +80,21 @@ public class Sample1 {
       JavaRDD<Vector> map;
       System.out.println("Inizio Map");
       map = lemmas.map(
-              new Function<ArrayList<String>, Vector>() {
+              new Function<Iterable<String>, Vector>() {
         @Override
-        public Vector call(ArrayList<String> A) throws Exception {
+        public Vector call(Iterable<String> A) throws Exception {
             Vector sum = Vectors.zeros(size);
             System.out.println("pr");
+            int cont=0;
             for(String s:A)
             {
                 
                 //Non serve più breeze.linalg.Vector<Object> asBreeze = sum.toDense().asBreeze();
                 //double a,Vector x,Vector y)  y += a * x   
                 BLAS.axpy(0, sum, load.transform(s));
-                BLAS.scal( ((double)1)/A.size() , sum);
+                cont++;
             }
+            BLAS.scal( ((double)1)/cont , sum);
             System.out.println(sum);
             return sum;
         }

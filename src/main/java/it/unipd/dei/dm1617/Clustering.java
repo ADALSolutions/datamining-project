@@ -16,44 +16,48 @@ public class Clustering implements Serializable
 	
     private ArrayList<Point> P; // Points that belong to the clustering
     private ArrayList<Cluster> clusters; // Clusters that belong to the clustering
-    private ArrayList<Point> centers;
     private HashMap<Point, Cluster> map;
 
-    public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, HashMap<Point, Cluster> map, ArrayList<Point> centroids) {
+    public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, HashMap<Point, Cluster> map, ArrayList<Point> centers) {
         this.P = P;
         this.clusters = clusters;
         this.map = map;
-        this.centers = centroids;
+        /*HashMap<Cluster,Point> mapCenters=new HashMap<Cluster,Point>();
+        for(int i=0;i<centers.size();i++)
+        {
+            mapCenters.put(clusters.get(i), centers.get(i));
+        }
+        this.setCenters(mapCenters);*/
     }   
     
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, HashMap<Point, Cluster> map) {
         this.P = P;
         this.clusters = clusters;
         this.map = map;
-        this.centers = this.getCenters();
     }    
     
-    public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, ArrayList<Point> centroids) {
+    public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters, ArrayList<Point> centers) {
         this.P = P;
         this.clusters = clusters;
         this.map = this.init(clusters);
-        this.centers = this.getCenters();
-        this.centers = centroids;
+        /*HashMap<Cluster,Point> mapCenters=new HashMap<Cluster,Point>();
+        for(int i=0;i<centers.size();i++)
+        {
+            mapCenters.put(clusters.get(i), centers.get(i));
+        }
+        this.setCenters(mapCenters);*/        
     }
     
     public Clustering(ArrayList<Point> P, ArrayList<Cluster> clusters) {
         this.P = P;
         this.clusters = clusters;
         this.map = this.init(clusters);
-        this.centers = this.getCenters();
-        this.centers = this.getCenters();
     }
     
     public Clustering(ArrayList<Point> P) {
         this.P = P;
         this.clusters = new ArrayList<Cluster>();
         this.map = this.init(clusters);
-        this.centers = this.getCenters();
     }    
     
     public ArrayList<Point> getPoints() {
@@ -216,6 +220,17 @@ public class Clustering implements Serializable
     		c.setCenter(mapCenters.get(c));
     		
     	}
+    }
+    //Returns a shallow copy of this Clustering instance.
+    public Clustering clone()
+    {
+        ArrayList<Point> Pclone=(ArrayList<Point>) P.clone();
+        HashMap<Point, Cluster> mapClone=(HashMap<Point, Cluster>) map.clone();
+        ArrayList<Cluster> clustersClone=(ArrayList<Cluster>) clusters.clone();
+        //HashMap<String,Object> addInfoClone=(HashMap<String,Object>) this.additionalInformation.clone();
+        Clustering Cclone=new Clustering(Pclone,clustersClone,mapClone);
+        //Cclone.additionalInformation=addInfoClone;
+        return Cclone;
     }
 
 }

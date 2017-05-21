@@ -11,7 +11,7 @@ apply plugin: "eclipse"
 
 sourceCompatibility = 1.8
 
-mainClassName = "it.unipd.dei.dm1617.examples.TfIdfTransformation"
+mainClassName = "it.unipd.dei.dm1617.test.Sample1"
 applicationDefaultJvmArgs = ["-Dspark.master=local"]
 
 jar {
