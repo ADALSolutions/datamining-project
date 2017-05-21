@@ -1,9 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package it.unipd.dei.dm1617.examples;
+
+package it.unipd.dei.dm1617.test;
 import it.unipd.dei.dm1617.*;
 import java.io.File;
 import java.io.BufferedReader;
@@ -65,7 +61,7 @@ public class Test
         System.out.println("Total points : "+points.size());
         int k=6;
         System.out.println("Total clusters : "+k);
-        ArrayList<Point> S = ClusteringBuilder.initRandomCentroids(points,k);
+        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(points,k);
         Clustering C = ClusteringBuilder.kmeansAlgorithm(points,S, k);
         int sum=0;
         for(int i=0;i<C.getK();i++)
@@ -121,7 +117,7 @@ public class Test
         System.out.println("Total points : "+points.size());
         int k=6;
         System.out.println("Total clusters : "+k);
-        ArrayList<Point> S = ClusteringBuilder.initRandomCentroids(points,k);
+        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(points,k);
         //Clustering C = ClusteringBuilder.PARTITION(points, S, k);
         Clustering C = ClusteringBuilder.FarthestFirstTraversal(points, k);
         int sum=0;

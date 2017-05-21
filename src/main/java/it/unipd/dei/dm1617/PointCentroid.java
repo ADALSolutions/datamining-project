@@ -18,7 +18,7 @@ public class PointCentroid<Double> extends Point<Double>
     org.apache.spark.mllib.linalg.Vector parse;
     
     public PointCentroid(ArrayList v) {
-        super(v);
+        super();
         this.parse = parseVector(v);
     }
     

@@ -26,7 +26,7 @@ public class TestSize
     PointCentroid point = new PointCentroid(a);
     System.out.println("Size del Point: "+ObjectSizeCalculator.getObjectSize(point));
     System.out.println("Size del Vector di spark : "+ObjectSizeCalculator.getObjectSize(point.parseVector()));
-    System.out.println("Size dell' ArrayList : "+ObjectSizeCalculator.getObjectSize(point.point));
+    //System.out.println("Size dell' ArrayList : "+ObjectSizeCalculator.getObjectSize(point.point));
   }    
     
     

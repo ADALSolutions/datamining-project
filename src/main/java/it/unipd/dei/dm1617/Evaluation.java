@@ -26,58 +26,72 @@ public class Evaluation {
         double dd[] = new double[size];
         Random r = new Random();
         for(int i = 0; i < size; i++) {
-            dd[i] = r.nextDouble();
+            dd[i] = r.nextDouble()*Double.MAX_VALUE;
         }
         return Vectors.dense(dd);
     }
-    
-    public static double HopkinsStatistic(ArrayList<Point> P, ArrayList<Point> sample) {
+        /*If H is close to 0, then P is likely to have a clustering structure, while if
+        H is close to 1, then the points of P are likely to be well (i.e., regularly)
+        spaced. If H is close to 0:5, then P is likely to be a random set.*/    
+    public static double HopkinsStatistic(ArrayList<Point> P, ArrayList<Point> X) {
         //sample.size>0
-        ArrayList<Point> generated = new ArrayList<Point>(sample.size());
-        int sizeVector = sample.get(0).parseVector().size();
-        for(int i = 0; i < sample.size(); i++) {
+        int t=X.size();
+        //CREO Y
+        ArrayList<Point> generated = new ArrayList<Point>(t);
+        int sizeVector = X.get(0).parseVector().size();
+        for(int i = 0; i < t; i++) {
             //genero numeri troppo grandi secondo me
             generated.add(new PointCentroid(Evaluation.generateRandomVector(sizeVector)));
         }
-        P.removeAll(sample);//credo vadano tolti
+        //CALCOLO w_i e u_i
+        //P.removeAll(X);//credo vadano tolti altrimenti per se stesso il punto ha dist=0
         ArrayList<Double> w = new ArrayList<Double>();
         ArrayList<Double> u = new ArrayList<Double>();
-        for(int i = 0; i < sample.size(); i++) {
-            Point x = sample.get(i);
+        for(int i = 0; i < t; i++) {
+            Point x = X.get(i);
             Point y = generated.get(i);
             double minw = Distance.calculateDistance(P.get(0).parseVector(), x.parseVector(), "standard");
             double minu = Distance.calculateDistance(P.get(0).parseVector(), y.parseVector(), "standard");
             for(int j = 1; j < P.size(); j++) {
                 double distw = Distance.calculateDistance(P.get(j).parseVector(), x.parseVector(), "standard");
                 double distu = Distance.calculateDistance(P.get(j).parseVector(), y.parseVector(), "standard");
-                if(distw < minw) {
+                if(distw < minw && P.get(0).equals(x)==false) {
                 	minw = distw;
                 }
-                if(distu < minu) {
+                if(distu < minu && P.get(0).equals(y)==false) {
                 	minu = distu;
                 }
             }
             w.add(minw);
             u.add(minu);
-        }  
+        } 
+        /*
+        Fa la stessa cosa di sopra ma scrittura più compatta
+        for(int i = 0; i < t; i++) {            
+            Point x = X.get(i);
+            Point y = generated.get(i);
+            Point minx=ClusteringBuilder.mostClose(P,x)._2;
+            Point miny=ClusteringBuilder.mostClose(P,y)._2;
+            w.add(Distance.calculateDistance(minx.parseVector(), x.parseVector(), "standard"));
+            u.add(Distance.calculateDistance(miny.parseVector(), x.parseVector(), "standard"));
+        }
+        */
         double sumu = 0;
         double sumw = 0;
-        for(int i = 0; i < sample.size(); i++){
+        for(int i = 0; i < X.size(); i++){
             sumu += u.get(i);
             sumw += w.get(i);
         }
         double H = sumw / (sumu + sumw);
         return H;
-        /*If H is close to 0, then P is likely to have a clustering structure, while if
-H is close to 1, then the points of P are likely to be well (i.e., regularly)
-spaced. If H is close to 0:5, then P is likely to be a random set.*/
+
     }
     
     //dato che si ripete per tutti i punti credo si possa ottimizzare in qualche modo
-    //The value of sp varies between 􀀀1 and 1.
+    //The value of sp varies between -1 and 1.
     //The closer sp to 1 the better.
     public static double SilhouetteCoefficient(Clustering C, Point p) {
-       double ap = C.getCluster(p).averageDistance(p);//C.getCluster(p)
+       double ap = C.getCluster(p).averageDistance(p);
        double min = Double.MAX_VALUE;
        for(int i = 0; i < C.getClusters().size(); i++) {
            if(!C.getCluster(p).equals(C.getClusters().get(i))) {
@@ -101,19 +115,23 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
        return sum / C.getPoints().size();
     }
     
-    @SuppressWarnings("empty-statement")
+    
     //complesso
     /*
     It measures the impurity of C, ranging from 0 (i.e., min impurity when all
     points of C belong to the same class), to log2 L (i.e., max impurity when
     all classes are equally represented in C).
     */
-    public static double AverageEntropyCluster(Clustering c, HashMap<Point, String> label) {
+    //Invece di calcolare l'entropia per un certo cluster, la calcolo per tutti i clusters
+    public static double AverageEntropyCluster(Clustering c, HashMap<Point, String> label) 
+    {
+        //Calcolo mC=#points in cluster C,io lo faccio per ogni cluster
         HashMap<Cluster, Integer> mC = new HashMap<Cluster, Integer>();
         for(Cluster cluster : c.getClusters()) {
         	mC.put(cluster, cluster.getPoints().size());
         }
-        //metto UpdatableNumber invece di Double per velocizzare come vorrebbe Cecca
+        //In questa parti calcolo m_i=#points of class i e m_C_i=#points of class i in C
+        //metto UpdatableNumber invece di Double per velocizzare
         HashMap<String, UpdatableNumber> m_i = new HashMap<String, UpdatableNumber>();
         HashMap<Cluster, HashMap<String, UpdatableNumber>> m_C_i = new HashMap<Cluster, HashMap<String, UpdatableNumber>>();
         Iterator it = label.entrySet().iterator();
@@ -127,6 +145,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
         }
         Set<String> classLabel = m_i.keySet();
         //Calcolo Entropia
+        //N.B volendo posso restituire l'entropia media per ogni cluster come ArrayList
         double average = 0;
         //volendo posso fare un hasmap e salvare l'entropia di ogni cluster
         for(Cluster cluster : c.getClusters()) {
@@ -191,12 +210,10 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
     }
     //#pairs of points of distinct classes in distinct clusters
     public static int f00(ArrayList<Point> points,ArrayList<Point> points2, HashMap<Point,String> label) {
-        //ArrayList<Tuple2<Point,Point>> al=new ArrayList<Tuple2<Point,Point>>();
         int f00 = 0;
         for(Point p : points) {
             for(Point q : points2) {
-                if(p != q && !label.get(p).equals(label.get(q))) { //creo coppie di classi distinte di cluster distinti
-                    //al.add(new Tuple2<Point,Point>(p,q));
+                if(p != q && !label.get(p).equals(label.get(q))) {
                     f00++;
                 }
             }
@@ -208,8 +225,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
     int f01 = 0;
         for(Point p : points) {
             for(Point q : points) {
-                if(p != q && !label.get(p).equals(label.get(q))) { //creo coppie di classi distinte di cluster distinti
-                    //al.add(new Tuple2<Point,Point>(p,q));
+                if(p != q && !label.get(p).equals(label.get(q))) {
                     f01++;
                 }
             }
@@ -221,8 +237,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
         int f10 = 0;
         for(Point p : points) {
             for(Point q : points2) {
-                if(p != q && label.get(p).equals(label.get(q))) { //creo coppie di classi distinte di cluster distinti
-                    //al.add(new Tuple2<Point,Point>(p,q));
+                if(p != q && label.get(p).equals(label.get(q))) {
                     f10++;
                 }
             }
@@ -235,8 +250,7 @@ spaced. If H is close to 0:5, then P is likely to be a random set.*/
         int f11 = 0;
         for(Point p : points) {
             for(Point q : points) {
-                if(p != q && label.get(p).equals(label.get(q))) { //creo coppie di classi distinte di cluster distinti
-                    //al.add(new Tuple2<Point,Point>(p,q));
+                if(p != q && label.get(p).equals(label.get(q))) {
                     f11++;
                 }
             }
