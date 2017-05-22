@@ -29,12 +29,63 @@ public class Test
     public static void main(String[] args) throws FileNotFoundException, IOException
     {
         long start = System.currentTimeMillis();
-        Test.KCenterMain(args);
-        //Test.KCenterMainRDD(args);
+        //Test.KCenterMain(args);
+        Test.KCenterMainRDD(args);
         long end = System.currentTimeMillis();
         System.out.println("TIME: "+(end-start)/100);
         
     }
+    public static void KCenterMainRDD(String[] args) throws FileNotFoundException, IOException
+    {
+        System.out.println("MyFirstTest");
+        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
+        SparkConf sparkConf = new SparkConf(true).setAppName("Compute primes");
+        JavaSparkContext sc = new JavaSparkContext(sparkConf); 
+        //GESTIONE INPUT IN MANIERA PARALLELA
+        JavaRDD<String> textFile = sc.textFile("input.txt");
+        JavaRDD<Point> points=textFile.map(
+        (doc)->
+        {
+            String[] split = doc.split("   "); 
+            ArrayList<Double> al=new ArrayList<Double>();
+            for(String ss:split)
+            {
+                if(ss.length()!=0)al.add(Double.parseDouble(ss));
+            }
+            return new PointCentroid(al);        
+        }
+        );
+        
+        //STAMPO INFO
+        int k=6;
+        System.out.println("Total points : "+points.count());
+        System.out.println("Total clusters : "+k);
+        //CREO PUNTI RANDOM S
+        long count = points.count();
+        int size=(int)(((double)count)/Math.sqrt(count));
+        JavaRDD<Point> S2 = points.sample(false,((double)2*k)/count);  
+        ArrayList<Point> S3 =new ArrayList( S2.collect());
+        ArrayList<Point> S=new ArrayList<Point> ();
+        for(int i=0;i<k;i++)
+        {
+            S.add(S3.get(i));
+        }        
+        //FACCIO PARTITION IN PARALLELO
+        Broadcast<ArrayList<Point>> broadcast = sc.broadcast(S);
+        ArrayList<Point> P=new ArrayList<Point>(points.collect());
+        ArrayList<Cluster> PARTITION = ClusteringBuilderMR.PARTITION(points, broadcast, k);
+        Clustering C=new Clustering(P,PARTITION);
+        int sum=0;
+        for(int i=0;i<C.getK();i++)
+        {
+            System.out.println(C.getClusters().get(i).toString()+" : "+C.getClusters().get(i).size());
+            sum+=C.getClusters().get(i).size();
+        }
+        double kcenter = C.kcenter();
+        System.out.println("phi: "+kcenter);
+        System.out.println("sum: "+sum);       
+        
+    }        
     public static void KMeansMain(String[] args) throws FileNotFoundException, IOException
     {
         System.out.println("MyFirstTest");
@@ -117,7 +168,7 @@ public class Test
         System.out.println("Total points : "+points.size());
         int k=6;
         System.out.println("Total clusters : "+k);
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(points,k);
+        //ArrayList<Point> S = ClusteringBuilder.getRandomCenters(points,k);
         //Clustering C = ClusteringBuilder.PARTITION(points, S, k);
         Clustering C = ClusteringBuilder.FarthestFirstTraversal(points, k);
         int sum=0;
@@ -149,7 +200,7 @@ public class Test
         
     }    
     
-    public static void KCenterMainRDD(String[] args) throws FileNotFoundException, IOException
+    public static void KCenterMainRDD_old(String[] args) throws FileNotFoundException, IOException
     {
         System.out.println("MyFirstTest");
         System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");

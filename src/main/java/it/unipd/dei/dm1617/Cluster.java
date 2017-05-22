@@ -15,19 +15,20 @@ public class Cluster implements Serializable
     private ArrayList<Point> P; // Points that belong to the Cluster
     private Point center; // centroid
     private String ID; // this can be useful
-    private static int id_static=0;
+    public static int id_static=0;
 
     public Cluster(ArrayList<Point> P) {
+            this(P,false);
+    }
+    public Cluster(ArrayList<Point> P,boolean centroid) {
             this.P =P;
-            this.center = this.calculateCentroid();
+            if(centroid)this.center = this.calculateCentroid();
+            else this.center=null;
             ID="Cluster"+String.valueOf(id_static);
             id_static++;
     }
     public Cluster() {
-            this.P=new ArrayList<Point>();
-            this.center =null;
-            ID="Cluster"+String.valueOf(id_static);
-            id_static++;     
+            this(new ArrayList<Point>(),false);    
     } 
 	
     public ArrayList<Point>  getPoints() 
@@ -94,14 +95,15 @@ public class Cluster implements Serializable
         }
         return sum;
     }
+    //Restituisce un Cluster con punti l'unione dei 2 cluster e come centro il nuovo centroide
     public static Cluster union(Cluster C1,Cluster C2)
     {
         HashSet<Point> set=new HashSet(C1.getPoints());
-        set.removeAll(C2.getPoints());
-        ArrayList<Point> al=(ArrayList<Point>) C1.getPoints().clone();
+        set.addAll(C2.getPoints());//nota:set non ammette duplicati
+        ArrayList<Point> al=(ArrayList<Point>) new ArrayList<Point>();
         al.addAll(set);
-        Cluster C12=new Cluster(al);//dentro di se calcolo il centroide   
-        return C12;
+        Cluster union=new Cluster(al,false);//il suo centro non equivale al centroide
+        return union;
     }
     public String toString()
     {
@@ -130,6 +132,14 @@ public class Cluster implements Serializable
 			return false;
 		return true;
 	}
+
+    public String getID() {
+        return ID;
+    }
+
+    public void setID(String ID) {
+        this.ID = ID;
+    }
     
  
 }
