@@ -29,7 +29,7 @@ public class PointCentroid<Double> extends Point<Double>
     
     @Override
     public org.apache.spark.mllib.linalg.Vector parseVector(ArrayList a) {
-        return Vectors.dense(ClusteringBuilder.toDoubleArray(a));
+        return Vectors.dense(Utility.toDoubleArray(a));
     }
     
     public org.apache.spark.mllib.linalg.Vector parseVector() {

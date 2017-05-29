@@ -37,6 +37,10 @@ public class Test
     }
     public static void KCenterMainRDD(String[] args) throws FileNotFoundException, IOException
     {
+        
+    }
+    public static void KCenterMainRDD(String[] args) throws FileNotFoundException, IOException
+    {
         System.out.println("MyFirstTest");
         System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
         SparkConf sparkConf = new SparkConf(true).setAppName("Compute primes");
@@ -73,7 +77,7 @@ public class Test
         //FACCIO PARTITION IN PARALLELO
         Broadcast<ArrayList<Point>> broadcast = sc.broadcast(S);
         ArrayList<Point> P=new ArrayList<Point>(points.collect());
-        ArrayList<Cluster> PARTITION = ClusteringBuilderMR.PARTITION(points, broadcast, k);
+        ArrayList<Cluster> PARTITION = ClusteringBuilderMR.PartitionMR(points, broadcast, k);
         Clustering C=new Clustering(P,PARTITION);
         int sum=0;
         for(int i=0;i<C.getK();i++)

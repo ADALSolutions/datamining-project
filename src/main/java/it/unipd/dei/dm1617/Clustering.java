@@ -91,7 +91,9 @@ public class Clustering implements Serializable
     public int getK() {
         return this.clusters.size();
     }
-    
+    public int getM() {
+        return clusters.get(0).getPoints().get(0).parseVector().size();
+    }    
     public int size() {
     	return this.P.size();
     }

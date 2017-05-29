@@ -4,10 +4,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 
 import org.apache.spark.mllib.linalg.BLAS;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
+import scala.Tuple2;
  
 public class Cluster implements Serializable
 {
@@ -64,7 +68,7 @@ public class Cluster implements Serializable
         }           
         return new PointCentroid(al);
     }
-
+    
     //average distance for the point respect to the points of the cluster
     public double averageDistance(Point p)
     {

@@ -112,13 +112,6 @@ public class ClusteringBuilder implements Serializable {
         return primeClustering;
     }
 
-    //scrive nuovi centroidi dentro al clustering
-    public static void initRandomCentroids(Clustering primeClustering, int k) {
-        for (int i = 0; i <= k - 1; i++) {
-            Point centroid = primeClustering.getRandom();
-            primeClustering.getCenters().add(centroid);
-        }
-    }
 
     public static ArrayList<Point> getRandomCenters(ArrayList<Point> P, int k) {
         ArrayList<Point> S = new ArrayList<Point>(k);
@@ -129,13 +122,6 @@ public class ClusteringBuilder implements Serializable {
         }
         return S;
     }
-    public static ArrayList<Point> getRandomCenters(int dim, int k) {
-        ArrayList<Point> S = new ArrayList<Point>(k);
-        for (int i = 0; i <= k - 1; i++) {
-            S.add( new PointCentroid(ClusteringBuilder.toArrayList(Evaluation.generateRandomVector(dim).toArray())));
-        }
-        return S;
-    }    
     
 
     public static ArrayList<Point> kmeansPlusPlus(ArrayList<Point> P , int k) {
@@ -226,21 +212,6 @@ public class ClusteringBuilder implements Serializable {
         return C_init;
     }
 
-    public static double[] toDoubleArray(ArrayList v) { // Una fantastica porcata
-        double[] dd = new double[v.size()];
-        for (int i = 0; i < v.size(); i++) {
-            dd[i] = (Double) v.get(i);
-        }
-        return dd;
-    }
-
-    public static ArrayList toArrayList(double[] dd) {
-        java.util.ArrayList v = new java.util.ArrayList(dd.length);
-        for (int i = 0; i < dd.length; i++) {
-            v.add(dd[i]);
-        }
-        return v;
-    }
 
     public static Clustering hierarchicalClustering(ArrayList<Point> P, int k, BiFunction<Clustering, Clustering, Boolean> f) {
         Clustering C = new Clustering(P);
@@ -310,76 +281,6 @@ public class ClusteringBuilder implements Serializable {
         }
     }
     
-    public static Tuple2<Integer,Point> mostFar(ArrayList<Point> P,Point c)
-    {
-        Point p=null;
-        double max=Double.MIN_VALUE;
-        int argmax =-1;
-        for(int i=0;i<P.size();i++)
-        {
-            double dist=Distance.calculateDistance(P.get(i).parseVector(), c.parseVector(), "standard");
-            if(dist>=max && P.get(i).equals(p)==false)
-            {
-                p=P.get(i);
-                max=dist;
-                argmax=i;
-            }  
-        }
-        return new Tuple2(argmax,p);   
-    }
-    public static Tuple2<Integer,Point> mostFar(ArrayList<Point> P,ArrayList<Point> S)
-    {
-        Point p=null;
-        double max=Double.MIN_VALUE;
-        int argmax =-1;
-        for(int i=0;i<S.size();i++)
-        {
-            Tuple2<Integer, Point> t=ClusteringBuilder.mostClose(P, S.get(i));
-            double dist=Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
-            if(dist>=max && P.get(i).equals(p)==false)
-            {
-                p=S.get(i);
-                max=dist;
-                argmax=i;
-            }  
-        }
-        return new Tuple2(argmax,p);   
-    }
-    public static Tuple2<Integer,Point> mostClose(ArrayList<Point> P,Point c)
-    {
-        Point p=null;
-        double min=Double.MAX_VALUE;
-        int argmin =-1;
-        for(int i=0;i<P.size();i++)
-        {
-            double dist=Distance.calculateDistance(P.get(i).parseVector(), c.parseVector(), "standard");
-            if(dist<=min && P.get(i).equals(p)==false)
-            {
-                p=P.get(i);
-                min=dist;
-                argmin=i;
-            }  
-        }
-        return new Tuple2(argmin,p);   
-    }
-    public static Tuple2<Integer,Point> mostClose(ArrayList<Point> P,ArrayList<Point> S)
-    {
-        Point p=null;
-        double min=Double.MAX_VALUE;
-        int argmin =-1;
-        for(int i=0;i<S.size();i++)
-        {
-            Tuple2<Integer, Point> t=ClusteringBuilder.mostClose(P, S.get(i));
-            double dist=Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
-            if(dist<=min && P.get(i).equals(p)==false)
-            {
-                p=S.get(i);
-                min=dist;
-                argmin=i;
-            }  
-        }
-        return new Tuple2(argmin,p);   
-    }    
     
     
 }

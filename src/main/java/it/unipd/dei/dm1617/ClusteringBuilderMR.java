@@ -6,15 +6,20 @@
 package it.unipd.dei.dm1617;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Stream;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.mllib.linalg.BLAS;
 import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.mllib.linalg.Vectors;
 import scala.Tuple2;
 
 /**
@@ -23,8 +28,77 @@ import scala.Tuple2;
  */
 public class ClusteringBuilderMR 
 {
+    public static Clustering kmeansAlgorithmMR_withPartitionMR(JavaSparkContext sc, ArrayList<Point> points, ArrayList<Point> SList, int k) 
+    {
+        int numPartitions = sc.defaultParallelism();
+        JavaRDD<Point> P = sc.parallelize(points, numPartitions);
+        Broadcast<ArrayList<Point>> S = sc.broadcast(SList);
+        P.cache();
+        ArrayList<Cluster> PartitionMR = ClusteringBuilderMR.PartitionMR(P, S, k);
+        Clustering primeClustering=new Clustering(points,PartitionMR );
+        boolean stopping_condition = false;
+        double phi = primeClustering.kmeans();
+        boolean stoppingCondition = false;
 
-    public static ArrayList<Cluster> PARTITION(JavaRDD<Point> points, Broadcast<ArrayList<Point>> Sbroadcast, int k) {
+        while (!stoppingCondition) {
+            //Calcolo nuovo Clustering
+            ArrayList<Point> centroids = ClusteringBuilderMR.calculateCentroidsMR(sc, primeClustering);
+            Broadcast<ArrayList<Point>> Snew = sc.broadcast(centroids);
+            ArrayList<Cluster> PartitionMR1 = ClusteringBuilderMR.PartitionMR(P, Snew, k);
+            Clustering secondClustering=new Clustering(points,PartitionMR1 );
+            double phikmeans = secondClustering.kmeans();
+            //Valuto se quello nuovo è megliore rispetto a quello vecchio
+            if (phi > phikmeans) {
+                phi = phikmeans;
+                primeClustering=secondClustering;
+            } else {
+                stoppingCondition = true;
+            }
+        }
+        return primeClustering;
+    }
+
+    public static Clustering PartitionMR_optimezed(ArrayList<Point> P,JavaRDD<Point> points, Broadcast<ArrayList<Point>> Sbroadcast, int k) 
+    {
+        ArrayList<Point> S = Sbroadcast.value();
+        //creo tuple del tipo <Punto p,centro assegnato>
+        JavaRDD<Tuple2<Point,Point>> map2 = points.map((p)->
+        {
+            Point mostClose = Utility.mostClose(S,p)._2;
+            return new Tuple2(p,mostClose);
+        }
+        );
+        //meglio ancora sarebbe avere solo gli ID dei punti
+        
+        //AVENDO COPPIE PUNTO->CENTRO DEL CLUSTER ORA POSSO CREARMI IL CLUSTER IN LOCALE
+        List<Tuple2<Point,Point>> collect = map2.collect();
+        ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+        HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
+        // for i <- 1 to k do C_i <- null
+        for (int i = 0; i < k; i++) {
+            Cluster C = new Cluster();
+            C.setCenter(S.get(i));
+            clusters.add(C);
+        }
+              
+        for(Tuple2<Point,Point> t:collect)
+        {
+            Point p=t._1;
+            for(Cluster C:clusters)
+            {
+                if(C.getCenter().equals(t._2))
+                {
+                    map.put(p, C);
+                    C.getPoints().add(p);
+                }
+            }
+
+        }    
+        return new Clustering(P, clusters, S);
+    }
+    
+    public static ArrayList<Cluster> PartitionMR(JavaRDD<Point> points, Broadcast<ArrayList<Point>> Sbroadcast, int k) 
+    {
         //Broadcast<ArrayList<Point>> broadcast = sc.broadcast(S);
         long count = points.count();
         int size = (int) (((double) count) / Math.sqrt(count));
@@ -86,8 +160,9 @@ public class ClusteringBuilderMR
         });
         ArrayList<Cluster> clusters = new ArrayList<Cluster>( map1.collect());
         return clusters;   
-
     }
+    
+    
     public static Clustering PARTITION_old(ArrayList<Point> P, ArrayList<Point> S, int k) {
         SparkConf sparkConf = new SparkConf(true).setAppName("Compute primes");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
@@ -143,6 +218,28 @@ public class ClusteringBuilderMR
         }
 
         return new Clustering(P, ALC, S);
+    }
+    
+    public static ArrayList<Point> calculateCentroidsMR(JavaSparkContext sc,Clustering CL)
+    {
+        ArrayList<Point> al=new ArrayList<Point>();
+        for(Cluster C:CL.getClusters())
+        {
+            JavaRDD<Point> parallelize = sc.parallelize(C.getPoints());
+            Broadcast<Point> b=sc.broadcast(C.getCenter());
+            Vector centroid = ClusteringBuilderMR.calculateCentroidMR(parallelize, b, 0);
+            PointCentroid p=new PointCentroid(centroid);
+            al.add(p);
+        }
+        return al;  
+    }
+    public static Vector calculateCentroidMR(JavaRDD<Point> points, Broadcast<Point> b,int dim)
+    {
+        Vector center=b.value().parseVector();
+        Vector sum=Vectors.zeros(dim);
+        JavaRDD<Vector> map = points.map((p)->{return p.parseVector();});
+        Vector reduce = map.reduce((v1,v2)-> { BLAS.axpy(1, v1, v2);return v2; });
+        return reduce;    
     }
 
 }
