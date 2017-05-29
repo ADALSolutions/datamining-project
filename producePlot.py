@@ -37,11 +37,13 @@ for i in range(0,len(keys),1) :
 
 #IMPOSTO limiti assi
 xmax=max(xList)
+xmin=min(xList)
 ymax=max(yList)
+ymin=min(yList)
 supy=ymax*1.1
-infy=-ymax*0.1
+infy=ymin
 supx=xmax*1.1
-infx=-xmax*0.1
+infx=xmin
 plt.axis([infx,supx,infy,supy])
 plt.xlabel("x")
 plt.ylabel("y")

@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.io.Serializable;
 import java.util.Random;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import scala.Tuple2;
 
 public class Clustering implements Serializable
 {
@@ -154,7 +158,20 @@ public class Clustering implements Serializable
         }
         return sum;
     }
-    
+
+    //esegue solo cluster in parallelo, non è proprio completamente parallelizzato,diciamo che è una via di mezzo ma vabbe'
+    public double kmeansMR(JavaSparkContext sc) 
+    {
+        double sum=0;
+        for(Cluster C:getClusters())
+        {
+            JavaRDD<Point> parallelize = sc.parallelize(C.getPoints());
+            Broadcast<Point> b=sc.broadcast(C.getCenter());
+            double kmeansMR = Cluster.kmeansMR(parallelize, b);
+            sum+=kmeansMR;
+        }
+        return sum;
+    }   
     public double kcenter() {
         double max = Distance.calculateDistance(this.clusters.get(0).getCenter().parseVector(),
                 this.clusters.get(0).getPoints().get(0).parseVector(), "standard");

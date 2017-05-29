@@ -28,6 +28,39 @@ import scala.Tuple2;
  */
 public class ClusteringBuilderMR 
 {
+    
+    //kmeans con partition buono
+    //p.s. nello stesso modo possiamo calcolare in parallelo valori phi di kmeans,kcenter,ecc.
+    public static Clustering kmeansAlgorithmMR_withPartitionMR_optimized(JavaSparkContext sc, ArrayList<Point> points, ArrayList<Point> SList, int k) 
+    {
+        int numPartitions = sc.defaultParallelism();
+        JavaRDD<Point> P = sc.parallelize(points, numPartitions);
+        Broadcast<ArrayList<Point>> S = sc.broadcast(SList);
+        P.cache();
+        Clustering primeClustering = ClusteringBuilderMR.PartitionMR_optimezed(points, P, S, k);
+        boolean stopping_condition = false;
+        double phi = primeClustering.kmeans();
+        boolean stoppingCondition = false;
+
+        while (!stoppingCondition) {
+            //Calcolo nuovo Clustering
+            ArrayList<Point> centroids = ClusteringBuilderMR.calculateCentroidsMR(sc, primeClustering);
+            Broadcast<ArrayList<Point>> Snew = sc.broadcast(centroids);
+            Clustering secondClustering = ClusteringBuilderMR.PartitionMR_optimezed(points,P, Snew, k);
+            double phikmeans = secondClustering.kmeans();//questo si può fare in parellelo
+            
+            //Valuto se quello nuovo è megliore rispetto a quello vecchio
+            if (phi > phikmeans) {
+                phi = phikmeans;
+                primeClustering=secondClustering;
+            } else {
+                stoppingCondition = true;
+            }
+        }
+        return primeClustering;
+    }
+    
+    //usa partition complicato
     public static Clustering kmeansAlgorithmMR_withPartitionMR(JavaSparkContext sc, ArrayList<Point> points, ArrayList<Point> SList, int k) 
     {
         int numPartitions = sc.defaultParallelism();
@@ -58,10 +91,14 @@ public class ClusteringBuilderMR
         return primeClustering;
     }
 
+    //quello buono,semplice e veloce
     public static Clustering PartitionMR_optimezed(ArrayList<Point> P,JavaRDD<Point> points, Broadcast<ArrayList<Point>> Sbroadcast, int k) 
     {
         ArrayList<Point> S = Sbroadcast.value();
         //creo tuple del tipo <Punto p,centro assegnato>
+        //parte in cui serve il lavoro in parralelo
+        //per ogni punto calcolo la distanza dai centri e scelgo quello più vicino usando il metodo di Utility
+        
         JavaRDD<Tuple2<Point,Point>> map2 = points.map((p)->
         {
             Point mostClose = Utility.mostClose(S,p)._2;
@@ -71,6 +108,7 @@ public class ClusteringBuilderMR
         //meglio ancora sarebbe avere solo gli ID dei punti
         
         //AVENDO COPPIE PUNTO->CENTRO DEL CLUSTER ORA POSSO CREARMI IL CLUSTER IN LOCALE
+        //questa parte è uguale a quello usata nel metodo partition di ClusteringBuilder
         List<Tuple2<Point,Point>> collect = map2.collect();
         ArrayList<Cluster> clusters = new ArrayList<Cluster>();
         HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
@@ -97,6 +135,7 @@ public class ClusteringBuilderMR
         return new Clustering(P, clusters, S);
     }
     
+    //molto più complicato dell'altro
     public static ArrayList<Cluster> PartitionMR(JavaRDD<Point> points, Broadcast<ArrayList<Point>> Sbroadcast, int k) 
     {
         //Broadcast<ArrayList<Point>> broadcast = sc.broadcast(S);
@@ -232,7 +271,7 @@ public class ClusteringBuilderMR
             al.add(p);
         }
         return al;  
-    }
+}
     public static Vector calculateCentroidMR(JavaRDD<Point> points, Broadcast<Point> b,int dim)
     {
         Vector center=b.value().parseVector();

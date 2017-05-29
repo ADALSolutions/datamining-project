@@ -145,5 +145,15 @@ public class Cluster implements Serializable
         this.ID = ID;
     }
     
+    
+    //kmeans eseguito in parallelo per un cluster
+    public static double kmeansMR(JavaRDD<Point> points, Broadcast<Point> Bcenter) 
+    {
+        Point center = Bcenter.value();
+        JavaRDD<Double> map1 = points.map((p)->{return Math.pow(Distance.calculateDistance(p.parseVector(), center.parseVector(), "standard"),2);});
+        Double reduce = map1.reduce((Double d1,Double d2)->{return d1+d2;});
+        return reduce;
+    }  
+    
  
 }

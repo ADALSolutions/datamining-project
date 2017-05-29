@@ -35,7 +35,7 @@ public class Test
         System.out.println("TIME: "+(end-start)/100);
         
     }
-    public static void KCenterMainRDD(String[] args) throws FileNotFoundException, IOException
+    public static void KMeansRDD(String[] args) throws FileNotFoundException, IOException
     {
         
     }
@@ -201,6 +201,7 @@ public class Test
             }
         }
         fw.close();
+        
         
     }    
     

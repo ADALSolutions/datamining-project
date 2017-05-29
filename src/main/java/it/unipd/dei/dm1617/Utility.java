@@ -5,7 +5,9 @@
  */
 package it.unipd.dei.dm1617;
 
+import breeze.linalg.DenseMatrix;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.spark.api.java.function.Function;
@@ -15,11 +17,29 @@ import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.linalg.Matrix;
 import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.mllib.linalg.VectorUDT;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.linalg.distributed.RowMatrix;
 import org.apache.spark.rdd.RDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.util.StatCounter;
 import scala.Tuple2;
+import org.apache.spark.ml.feature.Normalizer;
+import org.apache.spark.mllib.linalg.BLAS;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 
 /**
  *
@@ -131,17 +151,38 @@ public class Utility {
         return dd;
     }
     
-    
-  public static RDD<Vector> PCA( List<Vector> rowsList,SparkContext sc) 
+  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc) throws Exception
+  {  
+      return Utility.PCA(rowsList,sc,2,true);
+  }    
+  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc,int numComp,boolean normalize) throws Exception
   {     
+    if(normalize)
+    {
+        rowsList=Utility.normalize2(rowsList,sc);
+    }
     JavaRDD<Vector> rows = JavaSparkContext.fromSparkContext(sc).parallelize(rowsList);
     // Create a RowMatrix from JavaRDD<Vector>.
     RowMatrix mat = new RowMatrix(rows.rdd());
-    // Compute the top 3 principal components.
-    Matrix pc = mat.computePrincipalComponents(3);
+    Matrix pc = mat.computePrincipalComponents(numComp); 
     RowMatrix projected = mat.multiply(pc);
-    RDD<Vector> rows1 = projected.rows();
-    return rows1;
+
+        long numRows = projected.numRows();
+        System.out.println(numRows);
+        //dobbiamo ancora fare la normalizzazione :(
+        DenseMatrix<Object> toBreeze = projected.toBreeze();
+        ArrayList<Vector> vecs=new ArrayList<Vector>();
+        for(int i=0;i<numRows;i++)
+        {
+            double d[]=new double[numComp];
+            for(int j=0;j<numComp;j++)
+            {
+                d[j]=(Double)toBreeze.apply(i,j);
+            }
+            Vector v=Vectors.dense(d);
+            vecs.add(v);
+        }
+    return vecs;
   }
   
   static JavaDoubleRDD removeOutliersMR(JavaDoubleRDD rdd) 
@@ -151,6 +192,71 @@ public class Utility {
     return rdd.filter(new Function<Double, Boolean>() { public Boolean call(Double x) {
           return (Math.abs(x - summaryStats.mean()) < 3 * stddev);
         }});
+  }
+  
+  
+  public static List<Vector> normalize2(List<Vector> rowsList,SparkContext sc)
+  {
+      //non vedo questa grande differenza ma vabbene
+      //non nella forma almeno
+      //efficiente : questo
+      //corretto : immagino l'altro ma se non va...
+      //intanto proviamo questo ci volgiono 2 minuti
+      for(int i=0;i<rowsList.size();i++)
+      {
+          //BLAS crea un ml.vector.....
+          //<angry><angry><angry><angry><angry><angry><angry><angry><angry>
+          //tra il dire e il fare c'è di mezzo spark
+          //a posto
+         BLAS.scal( Vectors.norm(rowsList.get(i), 2),  rowsList.get(i));
+         rowsList.set(i,rowsList.get(i) );  
+      }
+      return rowsList;
+      
+  }
+  public static List<Vector> normalize(List<Vector> rowsList,SparkContext sc)
+  {
+      //un copia incolla non hai mai ucciso nessuno
+      //diamo a cesare quel che è di cesare
+      //se lui vuole ml.vector noi gli diamo ml.vector
+      int id=0;
+      //lassa stare va....
+      List<Row> data=new ArrayList<Row>();
+      for(int i=0;i<rowsList.size();i++)
+      {
+        
+        data.add( RowFactory.create(id, rowsList.get(i).asML()));
+      }  
+        StructType schema = new StructType(new StructField[]{
+            new StructField("id", DataTypes.IntegerType, false, Metadata.empty()),
+            new StructField("features", new VectorUDT(), false, Metadata.empty())
+        });
+        SQLContext sqlContext = new SQLContext(sc);
+        Dataset<Row> dataFrame = sqlContext.createDataFrame(data, schema);
+
+        // Normalize each Vector using $L^1$ norm.
+        Normalizer normalizer = new Normalizer()
+          .setInputCol("features")
+          .setOutputCol("normFeatures")
+          .setP(1.0);
+
+        Dataset<Row> l1NormData = normalizer.transform(dataFrame);
+        //l1NormData.show();
+
+        // Normalize each Vector using $L^\infty$ norm.
+        Dataset<Row> lInfNormData =
+          normalizer.transform(dataFrame, normalizer.p().w(Double.POSITIVE_INFINITY));
+        //lInfNormData.show(); 
+        List<Row> normalized = lInfNormData.collectAsList();
+        
+      /*List<Vector> normalizedData=new ArrayList<Vector>();
+      for(int i=0;i<normalized.size();i++)
+      {
+        normalizedData.add( (Vector)normalized.get(i).apply(1));
+      } */        
+      //return normalizedData;
+      return null;
+        
   }
     
     
