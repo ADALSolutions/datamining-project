@@ -20,17 +20,18 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.mllib.linalg.Vector;
 import scala.Tuple2;
+import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 /**
  *
  * @author DavideDP
  */
-public class Test 
+public class TestInizialiAlgoritmi 
 {
     public static void main(String[] args) throws FileNotFoundException, IOException
     {
         long start = System.currentTimeMillis();
         //Test.KCenterMain(args);
-        Test.KCenterMainRDD(args);
+        TestInizialiAlgoritmi.KCenterMainRDD(args);
         long end = System.currentTimeMillis();
         System.out.println("TIME: "+(end-start)/100);
         
@@ -46,19 +47,7 @@ public class Test
         SparkConf sparkConf = new SparkConf(true).setAppName("Compute primes");
         JavaSparkContext sc = new JavaSparkContext(sparkConf); 
         //GESTIONE INPUT IN MANIERA PARALLELA
-        JavaRDD<String> textFile = sc.textFile("input.txt");
-        JavaRDD<Point> points=textFile.map(
-        (doc)->
-        {
-            String[] split = doc.split("   "); 
-            ArrayList<Double> al=new ArrayList<Double>();
-            for(String ss:split)
-            {
-                if(ss.length()!=0)al.add(Double.parseDouble(ss));
-            }
-            return new PointCentroid(al);        
-        }
-        );
+        JavaRDD<Point> points=Utility.leggiInput("input.txt", sc);
         
         //STAMPO INFO
         int k=6;
@@ -93,26 +82,7 @@ public class Test
     public static void KMeansMain(String[] args) throws FileNotFoundException, IOException
     {
         System.out.println("MyFirstTest");
-        //A-Sets:A1 Synthetic 2-d data with varying number of vectors (N) and clusters (M). There are 150 vectors per cluster.
-        File file=new File("input.txt");
-        System.out.println(file.getAbsolutePath());
-        FileReader fr = new FileReader(file);
-        BufferedReader bf=new BufferedReader(fr);
-        String s;
-        ArrayList<Point> points=new ArrayList<Point> ();
-        while((s=bf.readLine())!=null)
-        {
-            String[] split = s.split("   "); 
-            //System.out.println(split.length);
-            ArrayList<Double> al=new ArrayList<Double>();
-            for(String ss:split)
-            {
-                if(ss.length()!=0)al.add(Double.parseDouble(ss));
-            }
-            //System.out.println(new PointCentroid(al));
-            points.add(new PointCentroid(al));
-            
-        }
+        ArrayList<Point> points=Utility.leggiInputLocale("input.txt");
         System.out.println("Total points : "+points.size());
         int k=6;
         System.out.println("Total clusters : "+k);
@@ -128,47 +98,14 @@ public class Test
         System.out.println("phi: "+kmeans);
         System.out.println("sum: "+sum);
         //stampa su file
-        file=new File("output.txt");
-        System.out.println(file.getAbsolutePath());
-        FileWriter fw = new FileWriter(file);
-        for(int i=0;i<C.getK();i++)
-        {
-            ArrayList<Point> po=C.getClusters().get(i).getPoints();
-            for(int j=0;j<po.size();j++)
-            {
-                Vector parse = po.get(j).parseVector();
-                String stam=String.valueOf(parse.apply(0))+" "+String.valueOf(parse.apply(1));
-                stam=stam+" "+C.getClusters().get(i).toString();
-                fw.write(stam+"\n");
-                fw.flush();
-            }
-        }
-        fw.close();
+        Utility.writeOuptut("output.txt", C);
         
     }
     public static void KCenterMain(String[] args) throws FileNotFoundException, IOException
     {
         System.out.println("MyFirstTest");
         //A-Sets:A1 Synthetic 2-d data with varying number of vectors (N) and clusters (M). There are 150 vectors per cluster.
-        File file=new File("input.txt");
-        System.out.println(file.getAbsolutePath());
-        FileReader fr = new FileReader(file);
-        BufferedReader bf=new BufferedReader(fr);
-        String s;
-        ArrayList<Point> points=new ArrayList<Point> ();
-        while((s=bf.readLine())!=null)
-        {
-            String[] split = s.split("   "); 
-            //System.out.println(split.length);
-            ArrayList<Double> al=new ArrayList<Double>();
-            for(String ss:split)
-            {
-                if(ss.length()!=0)al.add(Double.parseDouble(ss));
-            }
-            //System.out.println(new PointCentroid(al));
-            points.add(new PointCentroid(al));
-            
-        }
+        ArrayList<Point> points = Utility.leggiInputLocale("input.txt");
         System.out.println("Total points : "+points.size());
         int k=6;
         System.out.println("Total clusters : "+k);
@@ -185,48 +122,17 @@ public class Test
         System.out.println("phi: "+kcenter);
         System.out.println("sum: "+sum);
         //stampa su file
-        file=new File("output.txt");
-        System.out.println(file.getAbsolutePath());
-        FileWriter fw = new FileWriter(file);
-        for(int i=0;i<C.getK();i++)
-        {
-            ArrayList<Point> po=C.getClusters().get(i).getPoints();
-            for(int j=0;j<po.size();j++)
-            {
-                Vector parse = po.get(j).parseVector();
-                String stam=String.valueOf(parse.apply(0))+" "+String.valueOf(parse.apply(1));
-                stam=stam+" "+C.getClusters().get(i).toString();
-                fw.write(stam+"\n");
-                fw.flush();
-            }
-        }
-        fw.close();
-        
-        
+        Utility.writeOuptut("output.txt", C);
+   
     }    
     
     public static void KCenterMainRDD_old(String[] args) throws FileNotFoundException, IOException
     {
         System.out.println("MyFirstTest");
         System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
-        //A-Sets:A1 Synthetic 2-d data with varying number of vectors (N) and clusters (M). There are 150 vectors per cluster.
         SparkConf sparkConf = new SparkConf(true).setAppName("Compute primes");
         JavaSparkContext sc = new JavaSparkContext(sparkConf); 
-        JavaRDD<String> textFile = sc.textFile("input.txt");
-        JavaRDD<Point> points=textFile.map(
-        (doc)->
-        {
-            String[] split = doc.split("   "); 
-            //System.out.println(split.length);
-            ArrayList<Double> al=new ArrayList<Double>();
-            for(String ss:split)
-            {
-                if(ss.length()!=0)al.add(Double.parseDouble(ss));
-            }
-            //System.out.println(new PointCentroid(al));
-            return new PointCentroid(al);        
-        }
-        );
+        JavaRDD<Point> points=Utility.leggiInput("input.txt", sc);
         int letT=1;
         long count = points.count();
         ArrayList<Point> P=new ArrayList<Point>(points.collect());

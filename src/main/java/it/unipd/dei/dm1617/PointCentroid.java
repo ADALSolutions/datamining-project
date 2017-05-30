@@ -15,7 +15,7 @@ import org.apache.spark.mllib.linalg.Vectors;
  */
 public class PointCentroid<Double> extends Point<Double>
 {
-    org.apache.spark.mllib.linalg.Vector parse;
+    Vector parse;
     
     public PointCentroid(ArrayList v) {
         super();
@@ -28,13 +28,16 @@ public class PointCentroid<Double> extends Point<Double>
     }    
     
     @Override
-    public org.apache.spark.mllib.linalg.Vector parseVector(ArrayList a) {
+    public Vector parseVector(ArrayList a) {
         return Vectors.dense(Utility.toDoubleArray(a));
     }
     
-    public org.apache.spark.mllib.linalg.Vector parseVector() {
+    public Vector parseVector() {
         return parse;
     }    
+    public void assignVector(Vector v) {
+        parse=v;
+    }        
     
     
     

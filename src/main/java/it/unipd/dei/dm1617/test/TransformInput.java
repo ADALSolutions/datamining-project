@@ -43,7 +43,7 @@ import org.apache.spark.mllib.linalg.BLAS;
  * Extract a sample of pages from the given dataset, writing it in the
  * given datase.
  */
-public class Sample1 {
+public class TransformInput {
 
   public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
 
@@ -111,5 +111,20 @@ public class Sample1 {
     while(true){}
   }
 
+    public static void sample2(String[] args) throws FileNotFoundException, IOException, InterruptedException {
+    System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub");
+    SparkConf conf = new SparkConf(true).setAppName("Sampler");
+    JavaSparkContext sc = new JavaSparkContext(conf);
+String modelPath="C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub\\model\\Word2Vec";
+Word2VecModel load = Word2VecModel.load(sc.sc(), modelPath);
+System.out.println("Modello caricato");
+      String[] op = load.org$apache$spark$mllib$feature$Word2VecModel$$wordList();
+      for(String s:op)
+      {
+          System.out.println(s+" : "+load.transform(s).toString());
+      }
+
+    while(true){}
+  }
 }
 

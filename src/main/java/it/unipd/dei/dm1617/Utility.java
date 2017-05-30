@@ -6,6 +6,12 @@
 package it.unipd.dei.dm1617;
 
 import breeze.linalg.DenseMatrix;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -257,6 +263,66 @@ public class Utility {
       //return normalizedData;
       return null;
         
+  }
+  
+  public static JavaRDD<Point> leggiInput(String s,JavaSparkContext sc)
+  {
+      JavaRDD<String> textFile = sc.textFile("input.txt");
+        JavaRDD<Point> points=textFile.map(
+        (doc)->
+        {
+            String[] split = doc.split("   "); 
+            ArrayList<Double> al=new ArrayList<Double>();
+            for(String ss:split)
+            {
+                if(ss.length()!=0)al.add(Double.parseDouble(ss));
+            }
+            return new PointCentroid(al);        
+        }
+        );
+        return points;
+  }
+    public static ArrayList<Point> leggiInputLocale(String input) throws FileNotFoundException, IOException
+  {
+        File file=new File(input);
+        //System.out.println(file.getAbsolutePath());
+        FileReader fr = new FileReader(file);
+        BufferedReader bf=new BufferedReader(fr);
+        String s;
+        ArrayList<Point> points=new ArrayList<Point> ();
+        while((s=bf.readLine())!=null)
+        {
+            String[] split = s.split("   "); 
+            //System.out.println(split.length);
+            ArrayList<Double> al=new ArrayList<Double>();
+            for(String ss:split)
+            {
+                if(ss.length()!=0)al.add(Double.parseDouble(ss));
+            }
+            //System.out.println(new PointCentroid(al));
+            points.add(new PointCentroid(al));
+            
+        }
+        return points;
+  }
+  public static void writeOuptut(String s,Clustering C) throws IOException
+  {
+        File file=new File(s);
+        //System.out.println(file.getAbsolutePath());
+        FileWriter fw = new FileWriter(file);
+        for(int i=0;i<C.getK();i++)
+        {
+            ArrayList<Point> po=C.getClusters().get(i).getPoints();
+            for(int j=0;j<po.size();j++)
+            {
+                Vector parse = po.get(j).parseVector();
+                String stam=String.valueOf(parse.apply(0))+" "+String.valueOf(parse.apply(1));
+                stam=stam+" "+C.getClusters().get(i).toString();
+                fw.write(stam+"\n");
+                fw.flush();
+            }
+        }
+        fw.close();
   }
     
     
