@@ -35,32 +35,25 @@ public class TestNuovi
     public static void main(String[] args) throws FileNotFoundException, IOException, Exception 
     {
         
-        System.out.println("KMEANS");
-        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
-        SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
-        JavaSparkContext sc = new JavaSparkContext(sparkConf);
-        JavaRDD<Point> points = Utility.leggiInput("Iris.txt", sc);
+        ArrayList<Point> P = Utility.leggiInputLocale("input.txt");
+        
         int k=5;
-        List<Point> coll = points.collect();
-        ArrayList<Point> P=new ArrayList<Point>(coll.size());
-        P.addAll(coll);
-        P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
         //ArrayList<Point> S = Utility.initMedianCenters(P, k);
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
         System.out.println(S.size());
         
+        /*testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
         testKMeansEuristicoNormale3(P,S,k);
-        testKMeansEuristicoNormale3(P,S,k);
+        */
         
-        
-        /*
-        testKMeansEuristico2(P,S,k);
         testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+/*
         testKMeansEuristico2(P,S,k);
         testKMeans2(P,S,k);
         testKMeansEuristico2(P,S,k);
@@ -70,7 +63,7 @@ public class TestNuovi
         testKMeansEuristico2(P,S,k);
         testKMeans2(P,S,k);
         testKMeansEuristico2(P,S,k);
-        testKMeans2(P,S,k);  */       
+        testKMeans2(P,S,k);  */     
        
     }
         public static void testKMeansEuristicoNormale3(ArrayList<Point> P,ArrayList<Point> S,int k ) throws FileNotFoundException, IOException, Exception 
@@ -107,7 +100,7 @@ public class TestNuovi
         int cont=0;
         double sumPhi=0;
         double sumTime=0;
-        while(cont<100)
+        while(cont<10)
         {
             long start1,end1,start2,end2;
             ArrayList<Point> copyP = Utility.copy(P);
@@ -117,19 +110,19 @@ public class TestNuovi
             Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
             end2=System.currentTimeMillis();
             sumPhi+=C2.kmeans();
-            sumTime+=end2-start2;
+            sumTime+=(end2-start2);
 
             cont++;
         }
-           System.out.println("Tempo KMeans: "+(sumTime/100));   
-           System.out.println("Classico: "+(sumPhi/100));
+           System.out.println("Tempo KMeans: "+(sumTime/10));   
+           System.out.println("Classico: "+(sumPhi/10));
     }    
     public static void testKMeansEuristico2(ArrayList<Point> P,ArrayList<Point> S,int k) throws FileNotFoundException, IOException, Exception {
 
         int cont=0;
         double sumPhi=0;
         double sumTime=0;
-        while(cont<100)
+        while(cont<10)
         {
             long start1,end1,start2,end2;
             ArrayList<Point> copyP = Utility.copy(P);
@@ -139,11 +132,11 @@ public class TestNuovi
             Clustering C = ClusteringBuilder.kmeansEuristic(copyP,copyS , k);
             end1=System.currentTimeMillis();
             sumPhi+=C.kmeans();
-            sumTime+=end1-start1;
+            sumTime+=(end1-start1);
             cont++;
         }
-           System.out.println("Tempo KMeansEuristico: "+(sumTime/100));   
-           System.out.println("Euristico: "+(sumPhi/100));
+           System.out.println("Tempo KMeansEuristico: "+(sumTime/10));   
+           System.out.println("Euristico: "+(sumPhi/10));
     }        
     public static void testKMeansEuristico(String[] args) throws FileNotFoundException, IOException, Exception {
         System.out.println("KMEANSEURISTICO");
