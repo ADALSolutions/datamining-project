@@ -509,7 +509,7 @@ public class Utility {
   
   public static ArrayList<Point> copy( ArrayList<Point> points)
   {
-       ArrayList<Point> P=new  ArrayList<Point>(points.size());
+       ArrayList<Point> P=new  ArrayList<Point>();
        for(Point p:points)
        {
            P.add(p.copy());
