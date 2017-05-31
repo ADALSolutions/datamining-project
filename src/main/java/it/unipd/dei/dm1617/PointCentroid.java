@@ -39,6 +39,12 @@ public class PointCentroid<Double> extends Point<Double>
         parse=v;
     }        
     
+    public Point copy()
+    {
+        PointCentroid p = new PointCentroid(parse.copy());
+        p.setDist(getDist());
+        return p;
+    }
     
     
 }

@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -60,6 +61,68 @@ public class Utility {
             Point centroid = primeClustering.getRandom();
             primeClustering.getCenters().add(centroid);
         }
+    }
+    public static ArrayList<Point> initMedianCenters(ArrayList<Point> points,int k) 
+    {
+        ArrayList<Point> P=(ArrayList<Point>)points.clone();
+        ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+        for (int i = 0; i < k; i++) {
+            Cluster C = new Cluster();
+            clusters.add(C);
+        }
+        Random r=new Random();
+        int l=P.size()/k;
+        for (int i = 0; i <k; i++) 
+        {
+            for(int j=0;j<l;j++)
+            {
+                int nextInt = r.nextInt(P.size());     
+                Point p=P.get(nextInt);
+                clusters.get(i).getPoints().add(p);
+                P.remove(nextInt);
+            }  
+        }
+        clusters.get(clusters.size()-1).getPoints().addAll(P);
+        for (int i = 0; i < k; i++) {
+            Cluster C=clusters.get(i);
+            C.setCenter(C.calculateCentroid());
+        } 
+        ArrayList<Double> sums=new ArrayList<Double>();
+        for (int i = 0; i <k; i++) 
+        {
+            Cluster C=clusters.get(i);
+            double sum=0;
+            for(int j=0;j<C.getPoints().size();j++)
+            {
+                double dist=Distance.calculateDistance( C.getPoints().get(j).parseVector(),C.getCenter().parseVector(),"standard");
+                C.getPoints().get(j).setDist(dist);
+                sum+=dist;
+            }
+            sums.add(sum);
+        }
+        ArrayList<Point> centers=new ArrayList<Point> ();
+        for (int i = 0; i <k; i++) 
+        {
+            Cluster C=clusters.get(i);
+            Object[] toArray = C.getPoints().toArray();
+            Arrays.sort(toArray);
+            double acc=0;
+            double sum=sums.get(i)/2;
+            for(int j=0;j<toArray.length;j++)
+            {
+                acc+=((Point)toArray[j]).getDist();
+                if(acc>sum)
+                {
+                    double diff1=Math.abs(sum-(acc-((Point)toArray[j]).getDist()));
+                    double diff2=Math.abs(acc-sum);
+                    if(diff1<diff2)centers.add((Point)toArray[j-1]);
+                    else centers.add((Point)toArray[j]);
+                    break;
+                }
+            }
+        }
+        return centers;
+       
     }
     public static List<Vector> toArrayList(double[][] array )
     {
@@ -228,7 +291,7 @@ public class Utility {
             vectors.add(v);
         }
         //Trasformo punti in vettori
-        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc,numComp,optimal,true);
+        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc,numComp,optimal,normalize);
         //Trasformo vettori in punti, lo uso solo se voglio stampare il clustering fatto in 2d
         ArrayList<Point> pointsPCA = new ArrayList<Point>();
         for (Vector v : PCAs)//vectors
@@ -333,30 +396,19 @@ public class Utility {
   
   public static List<Vector> normalize2(List<Vector> rowsList,SparkContext sc)
   {
-      //non vedo questa grande differenza ma vabbene
-      //non nella forma almeno
-      //efficiente : questo
-      //corretto : immagino l'altro ma se non va...
-      //intanto proviamo questo ci volgiono 2 minuti
       for(int i=0;i<rowsList.size();i++)
       {
-          //BLAS crea un ml.vector.....
-          //<angry><angry><angry><angry><angry><angry><angry><angry><angry>
-          //tra il dire e il fare c'è di mezzo spark
-          //a posto
-         BLAS.scal( Vectors.norm(rowsList.get(i), 2),  rowsList.get(i));
+         //System.out.println("PRIMA: "+rowsList.get(i));
+         BLAS.scal( 1/Vectors.norm(rowsList.get(i), 2),  rowsList.get(i));
          rowsList.set(i,rowsList.get(i) );  
+         //System.out.println("DOPO: "+rowsList.get(i));
       }
       return rowsList;
       
   }
   public static List<Vector> normalize(List<Vector> rowsList,SparkContext sc)
   {
-      //un copia incolla non hai mai ucciso nessuno
-      //diamo a cesare quel che è di cesare
-      //se lui vuole ml.vector noi gli diamo ml.vector
       int id=0;
-      //lassa stare va....
       List<Row> data=new ArrayList<Row>();
       for(int i=0;i<rowsList.size();i++)
       {
@@ -453,6 +505,16 @@ public class Utility {
             }
         }
         fw.close();
+  }
+  
+  public static ArrayList<Point> copy( ArrayList<Point> points)
+  {
+       ArrayList<Point> P=new  ArrayList<Point>();
+       for(Point p:points)
+       {
+           P.add(p.copy());
+       }
+       return P;
   }
     
     

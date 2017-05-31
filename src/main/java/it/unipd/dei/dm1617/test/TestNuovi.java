@@ -32,9 +32,37 @@ import scala.Tuple2;
 public class TestNuovi {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, Exception {
-        testPCA_avanzato2(args);
+        testKMeansEuristico(args);
     }
     //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio clustering con d=7 e poi stampando su d=2 ottengo gli stessi risultati/gruppi
+    public static void testKMeansEuristico(String[] args) throws FileNotFoundException, IOException, Exception {
+        System.out.println("KMEANSEURISTICO");
+        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
+        SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
+        JavaSparkContext sc = new JavaSparkContext(sparkConf);
+        JavaRDD<Point> points = Utility.leggiInput("input13.txt", sc);
+        int k=5;
+        List<Point> coll = points.collect();
+        ArrayList<Point> P=new ArrayList<Point>(coll.size());
+        P.addAll(coll);
+        P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
+        //ArrayList<Point> S = Utility.initMedianCenters(P, k);
+        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
+        System.out.println(S.size());
+
+        Clustering C = ClusteringBuilder.kmeansEuristic(Utility.copy(P), Utility.copy(S), k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        
+        
+        //C.reduceDim(sc.sc(),2);
+        //C2.reduceDim(sc.sc(),2);
+        System.out.println("Euristico: "+C.kmeans());
+        System.out.println("Classico: "+C2.kmeans());
+        System.out.println("Ratio: "+C.kmeans()/C2.kmeans());
+        //Utility.writeOuptut("output.txt", C);
+        //Utility.writeOuptut("output.txt", C2);
+    }
+
     public static void testPCA_avanzato2(String[] args) throws FileNotFoundException, IOException, Exception {
         System.out.println("MyFirstTest");
         System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
@@ -50,7 +78,7 @@ public class TestNuovi {
         List<Point> AL=points.collect();
         ArrayList<Point> P=new ArrayList<Point>();
         P.addAll(AL);
-        P= Utility.PCAPoints(P, sc.sc(), 13,false, true);
+        P= Utility.PCAPoints(P, sc.sc(), 13,false, false);
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
         ArrayList<Point> P7=Utility.reducePointsDim(P, sc.sc(), 2);
         ArrayList<Point> S7=Utility.reducePointsDim(S, sc.sc(), 2);

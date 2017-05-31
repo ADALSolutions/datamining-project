@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.io.Serializable;
 import java.util.Objects;
 
-public abstract class Point<T> implements Serializable{
+public abstract class Point<T> implements Serializable,Comparable{
  
     protected String ID;
     public static int ID_static=0;
-    
+    private double dist;//Attributo Aggiunto per metodo euristico
     public Point() {
         ID=String.valueOf(ID_static);
         ID_static++;
@@ -49,6 +49,38 @@ public abstract class Point<T> implements Serializable{
         }
         return true;
     }
+
+    public abstract Point copy();
+    
+    public double getDist() {
+        return dist;
+    }
+
+    public void setDist(double dist) {
+        this.dist = dist;
+    }
+
+    @Override
+    public int compareTo(Object obj) 
+    {
+        if (this == obj) {
+            return 0;
+        }
+        if (obj == null) {
+            return 0;
+        }
+        if (getClass() != obj.getClass()) {
+            return 0;
+        }
+        final Point<?> other = (Point<?>) obj;
+        if(this.dist>other.getDist()) return 1;
+        if(this.dist==other.getDist()) return 0;
+        return -1;
+    }
+    
+    
+    
+    
     
     
 }

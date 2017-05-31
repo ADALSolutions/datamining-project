@@ -39,7 +39,7 @@ public class ClusteringBuilderMR
         P.cache();
         Clustering primeClustering = ClusteringBuilderMR.PartitionMR_optimezed(points, P, S, k);
         boolean stopping_condition = false;
-        double phi = primeClustering.kmeans();
+        double phi = primeClustering.kmeansMR(sc);
         boolean stoppingCondition = false;
 
         while (!stoppingCondition) {
@@ -47,7 +47,7 @@ public class ClusteringBuilderMR
             ArrayList<Point> centroids = ClusteringBuilderMR.calculateCentroidsMR(sc, primeClustering);
             Broadcast<ArrayList<Point>> Snew = sc.broadcast(centroids);
             Clustering secondClustering = ClusteringBuilderMR.PartitionMR_optimezed(points,P, Snew, k);
-            double phikmeans = secondClustering.kmeans();//questo si può fare in parellelo
+            double phikmeans = secondClustering.kmeansMR(sc);//questo si può fare in parellelo
             
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
             if (phi > phikmeans) {
