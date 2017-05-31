@@ -90,15 +90,17 @@ public class ClusteringBuilder implements Serializable {
     }
 
     public static Clustering kmeansAlgorithm(ArrayList<Point> P, ArrayList<Point> S, int k) {
-        Clustering primeClustering = ClusteringBuilder.Partition(P, S, k);;
+        //Clustering primeClustering = ClusteringBuilder.Partition(P, S, k);
+        Clustering primeClustering =ClusteringBuilder.PartitionEuristic(P, S, k,true,null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
-
+        int cont=0;
         while (!stoppingCondition) {
             //Calcolo nuovo Clustering
             ArrayList<Point> centroids = primeClustering.getCentroids();
-            Clustering secondClustering = ClusteringBuilder.Partition(P, centroids, k);
+            //Clustering secondClustering = ClusteringBuilder.Partition(P, centroids, k);
+            Clustering secondClustering =ClusteringBuilder.PartitionEuristic(P, centroids, k,true,null);
             double phikmeans = secondClustering.kmeans();
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
             if (phi > phikmeans) {
@@ -107,12 +109,15 @@ public class ClusteringBuilder implements Serializable {
             } else {
                 stoppingCondition = true;
             }
+            cont++;
         }
+        //System.out.println("Cont: "+cont);
         return primeClustering;
     }
 
-    public static Clustering kmeansEuristic(ArrayList<Point> P, ArrayList<Point> S, int k) {
-        Clustering primeClustering = ClusteringBuilder.PartitionEuristic(P, S, k,true,null);;
+    public static Clustering kmeansEuristic(ArrayList<Point> P, ArrayList<Point> S, int k) 
+    {
+        Clustering primeClustering = ClusteringBuilder.PartitionEuristic(P, S, k,true,null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
@@ -131,7 +136,7 @@ public class ClusteringBuilder implements Serializable {
                 stoppingCondition = true;
             }
         }
-        System.out.println("Cont: "+cont);
+        //System.out.println("Cont: "+cont);
         return primeClustering;
     }
 
@@ -368,6 +373,7 @@ public class ClusteringBuilder implements Serializable {
                 clusters.get(0).getPoints().addAll(P);
                 return new Clustering(P, clusters, S);
             }
+            int cont2=0;
             for (Point p : P) {
                 
                 Vector parseVector = p.parseVector();
@@ -375,10 +381,12 @@ public class ClusteringBuilder implements Serializable {
                 int index=C2.getCenters().indexOf(center);
                 Point centroid=S.get(index);
                 double dist2=Distance.calculateDistance(parseVector, centroid.parseVector(), "standard");
-                if(p.getDist()==dist2){System.out.println("BAKA"); }
+                if(p.getDist()==dist2){//System.out.println("BAKA");
+                }
                 if(p.getDist()>dist2)
                 {
-                     System.out.println("ENTRO");           
+                    cont2++;
+                    //System.out.println("ENTRO");           
                     p.setDist(dist2);
                     Cluster CL=clusters.get(index);
                     CL.getPoints().add(p);
@@ -396,6 +404,7 @@ public class ClusteringBuilder implements Serializable {
                 } 
 
             }
+            //System.out.println("Risparmio : "+cont2);
             return new Clustering(P, clusters, S);
             
         }

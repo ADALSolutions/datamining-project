@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -30,17 +31,31 @@ import scala.Tuple2;
  * @author DavideDP
  */
 public class TestNuovi {
-
-    public static void main(String[] args) throws FileNotFoundException, IOException, Exception {
-        testKMeansEuristico(args);
+    public static void main(String[] args) throws FileNotFoundException, IOException, Exception 
+    {
+        /*System.out.println("KMEANS");
+        ArrayList<Point> P = Utility.leggiInputLocale("Iris.txt");
+        int k=5;
+       //P= Utility.PCAPoints(P, null, 13,true, true);
+        //ArrayList<Point> S = Utility.initMedianCenters(P, k);
+        ArrayList<Point> S = ArrayList<Point>(5);
+        S.add(P.get(5));S.add(P.get(29));S.add(P.get(70));S.add(P.get(56));
+        System.out.println(S.size());
+        //TimeUnit.SECONDS.sleep(100);
+        testKMeansEuristico2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        */
+        testTempi(args);
     }
-    //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio clustering con d=7 e poi stampando su d=2 ottengo gli stessi risultati/gruppi
-    public static void testKMeansEuristico(String[] args) throws FileNotFoundException, IOException, Exception {
-        System.out.println("KMEANSEURISTICO");
+    public static void testTempi(String[] args) throws FileNotFoundException, IOException, Exception 
+    {
+        System.out.println("KMEANS");
         System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
         SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
-        JavaRDD<Point> points = Utility.leggiInput("input13.txt", sc);
+        JavaRDD<Point> points = Utility.leggiInput("Iris.txt", sc);
         int k=5;
         List<Point> coll = points.collect();
         ArrayList<Point> P=new ArrayList<Point>(coll.size());
@@ -49,10 +64,102 @@ public class TestNuovi {
         //ArrayList<Point> S = Utility.initMedianCenters(P, k);
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
         System.out.println(S.size());
-
-        Clustering C = ClusteringBuilder.kmeansEuristic(Utility.copy(P), Utility.copy(S), k);
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        //Monitor mon=MonitorFactory.start("myFirstMonitor");
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
         
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        testKMeans2(P,S,k);
+        testKMeansEuristico2(P,S,k);
+        //testKMeansEuristico2(P,S,k);
+    }
+    //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio clustering con d=7 e poi stampando su d=2 ottengo gli stessi risultati/gruppi
+    
+    
+    public static void testKMeans2(ArrayList<Point> P,ArrayList<Point> S,int k ) throws FileNotFoundException, IOException, Exception {
+
+        int cont=0;
+        double sumPhi=0;
+        double sumTime=0;
+        while(cont<100)
+        {
+            long start1,end1,start2,end2;
+            ArrayList<Point> copyP = Utility.copy(P);
+            ArrayList<Point> copyS = Utility.copy(S);
+
+            start2=System.currentTimeMillis();
+            Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+            end2=System.currentTimeMillis();
+            sumPhi+=C2.kmeans();
+            sumTime+=end2-start2;
+
+            cont++;
+        }
+           System.out.println("Tempo KMeans: "+(sumTime/100));   
+           System.out.println("Classico: "+(sumPhi/100));
+    }    
+    public static void testKMeansEuristico2(ArrayList<Point> P,ArrayList<Point> S,int k) throws FileNotFoundException, IOException, Exception {
+
+        int cont=0;
+        double sumPhi=0;
+        double sumTime=0;
+        while(cont<100)
+        {
+            long start1,end1,start2,end2;
+            ArrayList<Point> copyP = Utility.copy(P);
+            ArrayList<Point> copyS = Utility.copy(S); 
+
+            start1=System.currentTimeMillis();
+            Clustering C = ClusteringBuilder.kmeansEuristic(copyP,copyS , k);
+            end1=System.currentTimeMillis();
+            sumPhi+=C.kmeans();
+            sumTime+=end1-start1;
+            cont++;
+        }
+           System.out.println("Tempo KMeansEuristico: "+(sumTime/100));   
+           System.out.println("Euristico: "+(sumPhi/100));
+    }        
+    public static void testKMeansEuristico(String[] args) throws FileNotFoundException, IOException, Exception {
+        System.out.println("KMEANSEURISTICO");
+        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
+        SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
+        JavaSparkContext sc = new JavaSparkContext(sparkConf);
+        JavaRDD<Point> points = Utility.leggiInput("Iris.txt", sc);
+        int k=5;
+        List<Point> coll = points.collect();
+        ArrayList<Point> P=new ArrayList<Point>(coll.size());
+        P.addAll(coll);
+        //P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
+        //ArrayList<Point> S = Utility.initMedianCenters(P, k);
+        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
+        System.out.println(S.size());
+        long start1,end1,start2,end2;
+        
+        
+        ArrayList<Point> copyP = Utility.copy(P);
+        ArrayList<Point> copyS = Utility.copy(S);
+
+        start2=System.currentTimeMillis();
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        end2=System.currentTimeMillis();
+        System.out.println("Tempo KMeans: "+(end2-start2));   
+        
+        
+        start1=System.currentTimeMillis();
+        Clustering C = ClusteringBuilder.kmeansEuristic(copyP,copyS , k);
+        end1=System.currentTimeMillis();
+        System.out.println("Tempo Euristico: "+(end1-start1));        
         
         //C.reduceDim(sc.sc(),2);
         //C2.reduceDim(sc.sc(),2);

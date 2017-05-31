@@ -30,8 +30,11 @@ dependencies {
     compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '2.1.0'
     compile group: 'org.apache.spark', name: 'spark-mllib_2.11', version: '2.1.0'
     compile group: 'it.unimi.dsi', name: 'fastutil', version: '7.1.0'
+    compile group: 'com.jamonapi', name: 'jamon', version: '2.81'
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.7.0'
     compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.7.0', classifier: 'models-english'
+    
+
     
     
 }
