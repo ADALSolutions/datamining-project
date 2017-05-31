@@ -105,10 +105,14 @@ public class Clustering implements Serializable {
         }
     }
 
-    public void assignPoint(Point p, Cluster c) {
-        map.get(p).getPoints().remove(p);
-        map.put(p, c);
-        c.getPoints().add(p);
+    public void assignPoint(Point p, Cluster c) 
+    {
+        if(!map.get(p).equals(c))
+        {
+            map.get(p).getPoints().remove(p);
+            map.put(p, c);
+            c.getPoints().add(p);
+        }
     }
 
     public void removePoint(Point p) {

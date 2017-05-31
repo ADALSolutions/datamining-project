@@ -13,6 +13,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -27,12 +29,12 @@ public class TestAggiornati
 {
     public static void main(String[] args) throws FileNotFoundException, IOException, Exception 
     {
-        testIteratoConfrontoKMeansNormale();
+        testIteratoConfrontoKMeansNormaleEuristico();
         
     }    
     public static void testIteratoConfrontoKMeansNormaleEuristico() throws FileNotFoundException, IOException, Exception 
     {
-        int length=100;
+        int length=50;
         int k=5;
         Tuple2<ArrayList<Point>, ArrayList<Point>> t = caricoSpark(k);
         ArrayList<Point>    S=t._2;
@@ -45,7 +47,7 @@ public class TestAggiornati
         while(i<length)
         {
             //<tempoOld,tempoNuovo,QualOld,QualNuovo>
-            Tuple4<Integer, Integer, Double, Double> t4 = testConfrontoKmeans(false,P,S,k);
+            Tuple4<Integer, Integer, Double, Double> t4 = testConfrontoKmeansNormaleEuristico(false,P,S,k);
             i++;
             sumTimeOld+=t4._1();
             sumTimeNuovo+=t4._2();
@@ -56,6 +58,8 @@ public class TestAggiornati
         System.out.println("Tempo Euristico: "+sumTimeNuovo/length);
         System.out.println("Qualità Normale: "+sumPhiOld/length);
         System.out.println("Qualità Euristico: "+sumPhiNuovo/length);
+        System.out.println("Cont KMeans: "+ClusteringBuilder.contMeans/length);
+        System.out.println("Cont Euristico: "+ClusteringBuilder.contEuristico/length);
         
     }
     public static void testIteratoConfrontoKMeansNormale() throws FileNotFoundException, IOException, Exception 
@@ -95,15 +99,21 @@ public class TestAggiornati
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
         
         //LEGGO INPUT
-        JavaRDD<Point> points = Utility.leggiInput("Input.txt", sc);
+        JavaRDD<Point> points = Utility.leggiInput("Iris.txt", sc);
         List<Point> coll = points.collect();
         ArrayList<Point> P=new ArrayList<Point>(coll.size());
         P.addAll(coll);
         
-        //SCELGO CENTRI
-        //P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
-        //ArrayList<Point> S = Utility.initMedianCenters(P, k);
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
+        /*
+        try {
+            //SCELGO CENTRI
+            P= Utility.PCAPoints(P, sc.sc(), 2,false, true);
+        } catch (Exception ex) {
+            System.err.println("Exception");
+            System.exit(1);
+        }*/
+        ArrayList<Point> S = Utility.initMedianCenters(P, k);
+        //ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
         System.out.println(S.size());  
         return new Tuple2(P,S);
     }
@@ -126,10 +136,12 @@ public class TestAggiornati
         start1=System.currentTimeMillis();
         Clustering CNormale = ClusteringBuilder.kmeansAlgorithm(copyP,copyS , k);
         end1=System.currentTimeMillis();
- 
+        
+        copyP = Utility.copy(P);
+        copyS = Utility.copy(S); 
         //Eseguo KMEANS VECCHIO(FACCIO UPDATE AL CLUSTERING)
         start2=System.currentTimeMillis();
-        Clustering Ceuristic = ClusteringBuilder.kmeansEuristic(P, S, k);
+        Clustering Ceuristic = ClusteringBuilder.kmeansEuristic(copyP,copyS, k);
         end2=System.currentTimeMillis();
 
         //STAMPO INFORMAZIONI COME TEMPO E QUALITA'

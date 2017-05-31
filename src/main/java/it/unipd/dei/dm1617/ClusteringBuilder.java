@@ -473,25 +473,32 @@ public class ClusteringBuilder implements Serializable {
             }
             cont++;
         }
-//System.out.println("Cont KMeans: " + cont);
-        ClusteringBuilder.numIter = cont;
+        //System.out.println("Cont KMeans: " + cont);
+        //ClusteringBuilder.numIter = cont;
+        contMeans=contMeans+cont;
         return primeClustering;
     }
 
     public static Clustering kmeansEuristic(ArrayList<Point> P, ArrayList<Point> S, int k) {
+        //System.out.println("Inizio algoritmo");
         Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k, true, true, null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
         int cont = 0;
+        
         while (!stoppingCondition) {
             cont++;
+            
             //Calcolo nuovo Clustering
             ArrayList<Point> centroids = primeClustering.getCentroids();
             Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k, false, true, primeClustering);
             double phikmeans = secondClustering.kmeans();
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
-            if (phi > phikmeans) {
+            
+            //System.out.println(""+Math.abs(phi-phikmeans)+"     "+1/(double)cont);
+            if (phi > phikmeans  ) //|| Math.abs(phi-phikmeans) >1/(double)cont
+            {
                 phi = phikmeans;
                 primeClustering = secondClustering;
             } else {
@@ -501,8 +508,12 @@ public class ClusteringBuilder implements Serializable {
                 break;
             }*/
         }
-//System.out.println("Cont Euristico: " + cont);
+        //System.out.println("Cont Euristico: " + cont);
+        contEuristico=contEuristico+cont;
         return primeClustering;
     }
+    
+    public static int contEuristico;
+    public static int contMeans;
 
 }
