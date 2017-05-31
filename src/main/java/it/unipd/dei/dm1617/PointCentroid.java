@@ -13,7 +13,7 @@ import org.apache.spark.mllib.linalg.Vectors;
  *
  * @author DavideDP
  */
-public class PointCentroid<Double> extends Point<Double>
+public class PointCentroid extends Point
 {
     Vector parse;
     
@@ -23,7 +23,7 @@ public class PointCentroid<Double> extends Point<Double>
     }
     
     public PointCentroid(Vector v) {
-        super();//dovrei fare Clustering.toArrayList(v.toArray) ma spreca tempo e non lo uso mai quindi...
+        super();
         this.parse = v;
     }    
     

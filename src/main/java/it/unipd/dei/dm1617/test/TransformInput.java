@@ -129,5 +129,40 @@ System.out.println("Modello caricato");
 
     while(true){}
   }
+    
+    
+        
+    public static void testSinonimi(String[] args) throws FileNotFoundException, IOException, InterruptedException {
+
+        System.out.println("Sample");
+        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub");
+        SparkConf conf = new SparkConf(true).setAppName("Sampler");
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        //sc.sc().setLogLevel("ERROR");
+
+        String inputPath = "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub\\medium-sample.dat.bz2";          //medium-sample.dat.bz2
+        String outputPath = "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub\\output";
+        String modelPath = "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub\\model\\Word2Vec";
+        double fraction = 0.1;
+
+        Word2VecModel load = Word2VecModel.load(sc.sc(), modelPath);
+        System.out.println("Modello caricato");
+        Broadcast<Word2VecModel> b = sc.broadcast(load);
+        Vector transform = load.transform(load.org$apache$spark$mllib$feature$Word2VecModel$$wordList()[0]);
+        int size = transform.size();
+        System.out.println("size:" + String.valueOf(size));
+        String[] wordList = load.org$apache$spark$mllib$feature$Word2VecModel$$wordList();
+        System.out.println("size word list:" + String.valueOf(wordList.length));
+        /*for(String s:wordList)
+      {
+      System.out.println(s);
+      }*/
+        Tuple2<String, Object>[] mappiamo = load.findSynonyms("garden", 10);
+
+        for (Tuple2<String, Object> t : mappiamo) {
+            System.out.println(t._1 + " : " + String.valueOf(t._2) + " " + load.transform("botanic"));
+            //System.out.println("Sample");
+        }
+    }
 }
 

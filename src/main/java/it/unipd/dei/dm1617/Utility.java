@@ -55,13 +55,6 @@ import org.apache.spark.sql.types.StructType;
  */
 public class Utility {
 
-    //scrive nuovi centroidi dentro al clustering
-    public static void initRandomCentroids(Clustering primeClustering, int k) {
-        for (int i = 0; i <= k - 1; i++) {
-            Point centroid = primeClustering.getRandom();
-            primeClustering.getCenters().add(centroid);
-        }
-    }
     public static ArrayList<Point> initMedianCenters(ArrayList<Point> points,int k) 
     {
         ArrayList<Point> P=(ArrayList<Point>)points.clone();
@@ -124,7 +117,7 @@ public class Utility {
         return centers;
        
     }
-    public static List<Vector> toArrayList(double[][] array )
+    public static List<Vector> toListVector(double[][] array )
     {
         LinkedList<Vector> rowsList = new LinkedList<Vector>();
         for (int i = 0; i < array.length; i++) {
@@ -148,7 +141,7 @@ public class Utility {
         int argmin = -1;
         for (int i = 0; i < P.size(); i++) {
             double dist = Distance.calculateDistance(P.get(i).parseVector(), c.parseVector(), "standard");
-            if (dist <= min && P.get(i).equals(p) == false) {
+            if (dist <= min && P.get(i).equals(c) == false) {
                 p = P.get(i);
                 min = dist;
                 argmin = i;
@@ -164,7 +157,7 @@ public class Utility {
         for (int i = 0; i < S.size(); i++) {
             Tuple2<Integer, Point> t = Utility.mostClose(P, S.get(i));
             double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
-            if (dist <= min && P.get(i).equals(p) == false) {
+            if (dist <= min ) {//tolto && P.get(i).equals(p) == false
                 p = S.get(i);
                 min = dist;
                 argmin = i;
@@ -203,7 +196,7 @@ public class Utility {
         for (int i = 0; i < S.size(); i++) {
             Tuple2<Integer, Point> t = Utility.mostClose(P, S.get(i));
             double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
-            if (dist >= max && P.get(i).equals(p) == false) {
+            if (dist >= max) {//tolto  && P.get(i).equals(p) == false
                 p = S.get(i);
                 max = dist;
                 argmax = i;
@@ -221,7 +214,7 @@ public class Utility {
         return dd;
     }
 
-  public static Clustering  PCA( Clustering C,JavaSparkContext sc,int numComp,boolean normalize) throws Exception
+  public static Clustering  PCAClustering( Clustering C,JavaSparkContext sc,int numComp,boolean normalize) throws Exception
   {
         ArrayList<Point> P = C.getPoints();
         ArrayList<Point> centers = C.getCenters();
@@ -346,6 +339,8 @@ public class Utility {
                 cont++;
             }
       }
+      
+     System.out.println("DimensioniIniziali: "+numCols+"  DimensioniFinali: "+cont);
      return cont; 
       
   }  

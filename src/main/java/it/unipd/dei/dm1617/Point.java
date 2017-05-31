@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.io.Serializable;
 import java.util.Objects;
 
-public abstract class Point<T> implements Serializable,Comparable{
+public abstract class Point implements Serializable,Comparable{
  
     protected String ID;
     public static int ID_static=0;
@@ -43,7 +43,7 @@ public abstract class Point<T> implements Serializable,Comparable{
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Point<?> other = (Point<?>) obj;
+        final Point other = (Point) obj;
         if (!Objects.equals(this.ID, other.ID)) {
             return false;
         }
@@ -72,7 +72,7 @@ public abstract class Point<T> implements Serializable,Comparable{
         if (getClass() != obj.getClass()) {
             return 0;
         }
-        final Point<?> other = (Point<?>) obj;
+        final Point other = (Point) obj;
         if(this.dist>other.getDist()) return 1;
         if(this.dist==other.getDist()) return 0;
         return -1;

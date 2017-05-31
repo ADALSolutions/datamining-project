@@ -21,7 +21,8 @@ import scala.Tuple2;
  */
 public class ClusteringBuilder implements Serializable {
 
-    public static int numIter=-1;
+    public static int numIter = -1;
+
     public static Clustering Partition(ArrayList<Point> P, ArrayList<Point> S, int k) {
         if ((S.size() == k)) {
         } else {
@@ -42,19 +43,11 @@ public class ClusteringBuilder implements Serializable {
         }
         for (Point p : P) {
             Vector parseVector = p.parseVector();
-            // argmin computation
-            double min = Distance.calculateDistance(parseVector, S.get(0).parseVector(), "standard");
-            int argmin = 0;
-            for (int i = 1; i <= k - 1; i++) {
-                double dist = Distance.calculateDistance(parseVector, S.get(i).parseVector(), "standard");
-                if (dist < min) {
-                    min = dist;
-                    argmin = i;
-                }
-            }
-            Cluster C = clusters.get(argmin);
+            Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
+            Cluster C = clusters.get(mostClose._1);
             map.put(p, C);
             C.getPoints().add(p);
+            p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
 
         }
         return new Clustering(P, clusters, S);//S centroidi        
@@ -91,15 +84,15 @@ public class ClusteringBuilder implements Serializable {
     }
 
     public static Clustering kmeansAlgorithm_old(ArrayList<Point> P, ArrayList<Point> S, int k) {
-        Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k,true,false,null);
+        Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k, true, false, null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
-        int cont=0;
+        int cont = 0;
         while (!stoppingCondition) {
             //Calcolo nuovo Clustering
             ArrayList<Point> centroids = primeClustering.getCentroids();
-            Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k,true,false,primeClustering);
+            Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k, true, false, primeClustering);
             double phikmeans = secondClustering.kmeans();
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
             if (phi > phikmeans) {
@@ -110,7 +103,7 @@ public class ClusteringBuilder implements Serializable {
             }
             cont++;
         }
-        System.out.println("Counting KMeans: "+cont);
+//System.out.println("Counting KMeans: " + cont);
         return primeClustering;
     }
 
@@ -189,13 +182,9 @@ public class ClusteringBuilder implements Serializable {
         return S;
     }
 
-    public static ArrayList<Point> kmeansPlusPlus(Clustering C, int k) {
-        return kmeansPlusPlus(C.getPoints(), k);
-    }
-
-    public static Clustering kmeansPlusPlusAlgorithm(Clustering primeClustering, int k) {
-        ClusteringBuilder.kmeansPlusPlus(primeClustering, k);
-        return ClusteringBuilder.kmeansAlgorithm(primeClustering.getPoints(), primeClustering.getCenters(), k);
+    public static Clustering kmeansPlusPlusAlgorithm(ArrayList<Point> P, int k) {
+        ArrayList<Point> S = ClusteringBuilder.kmeansPlusPlus(P, k);
+        return ClusteringBuilder.kmeansAlgorithm(P, S, k);
     }
 
     public static Clustering PartitioningAroundMedoids(ArrayList<Point> P, ArrayList<Point> S, int k) {
@@ -237,8 +226,7 @@ public class ClusteringBuilder implements Serializable {
     }
 
     public static Clustering hierarchicalClustering(ArrayList<Point> P, int k, BiFunction<Clustering, Clustering, Boolean> f) {
-        Clustering C = new Clustering(P);
-        //Creo N Clusters
+        Clustering C = ClusteringBuilder.Partition(P, ClusteringBuilder.getRandomCenters(P, k), k);
         ArrayList<Cluster> al = new ArrayList<Cluster>();
         for (Point p : P) {
             ArrayList<Point> alp = new ArrayList<Point>();
@@ -246,7 +234,7 @@ public class ClusteringBuilder implements Serializable {
             Cluster cluster = new Cluster(alp);
         }
         MergingCriterion mc = new MergingCriterion(C);
-        while (!f.apply(C, null)) { //ops
+        while (!f.apply(C, null)) {
             mc.mergeSingleLinkage();
         }
         return C;
@@ -259,8 +247,7 @@ public class ClusteringBuilder implements Serializable {
             ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
             return kmeansAlgorithm(P, S, k);
         } else if (algorithm.equals("kmeansPlusPlus")) {
-            Clustering C = new Clustering(P);
-            return kmeansPlusPlusAlgorithm(C, k);
+            return kmeansPlusPlusAlgorithm(P, k);
         } else if (algorithm.equals("kmedian")) {
             ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
             return PartitioningAroundMedoids(P, S, k);
@@ -412,48 +399,42 @@ public class ClusteringBuilder implements Serializable {
             //System.out.println(","+(end-start));
             //Tempo Partition Inizial            
             return new Clustering(P, clusters, S);//S centroidi  
-        } 
-        else {
+        } else {
             //Aggiornamento Clustering
             int cont2 = 0;
-            
+
             for (Point p : P) {
 
                 Vector parseVector = p.parseVector();
                 Cluster C = C2.getMap().get(p);
-                int index=C2.getClusters().indexOf(C);
-                Point center=S.get(index);
+                int index = C2.getClusters().indexOf(C);
+                Point center = S.get(index);
                 double dist2 = Distance.calculateDistance(parseVector, center.parseVector(), "standard");
-                
-                if (euristic) 
-                {
-                    
-                    if(p.getDist() > dist2)
-                    {
-                        
-                        long start=System.nanoTime();
+
+                if (euristic) {
+
+                    if (p.getDist() > dist2) {
+
+                        long start = System.nanoTime();
                         cont2++;
                         //System.out.println("ENTRO");                     
                         p.setDist(dist2);
-                        long end=System.nanoTime();
+                        long end = System.nanoTime();
                         //System.out.println("PezzoCorto: "+(end-start));
+                    } else {
+                        long start = System.nanoTime();
+                        ArrayList<Cluster> clusters = C2.getClusters();
+                        ArrayList<Point> centers = C2.getCenters();
+                        Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
+                        C = clusters.get(mostClose._1);
+                        C2.assignPoint(p, C);
+                        p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector(), "standard"));
+                        long end = System.nanoTime();
+                        //System.out.println("PezzoLungo: "+(end-start));
                     }
-                    else
-                    {
-                    long start=System.nanoTime();
-                     ArrayList<Cluster> clusters = C2.getClusters();
-                    ArrayList<Point> centers = C2.getCenters();
-                    Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
-                    C = clusters.get(mostClose._1);
-                    C2.assignPoint(p, C);
-                    p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector(), "standard"));  
-                    long end=System.nanoTime();
-                    //System.out.println("PezzoLungo: "+(end-start));
-                    }
-                } 
-                else {
+                } else {
                     ArrayList<Cluster> clusters = C2.getClusters();
-                    ArrayList<Point> centers = C2.getCenters();
+                    //ArrayList<Point> centers = C2.getCenters();
                     Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
                     C = clusters.get(mostClose._1);
                     C2.assignPoint(p, C);
@@ -462,27 +443,26 @@ public class ClusteringBuilder implements Serializable {
 
             }
             //System.out.println("Risparmio : "+cont2);
-            for(int i=0;i<S.size();i++)
-            {
+            for (int i = 0; i < S.size(); i++) {
                 C2.getClusters().get(i).setCenter(S.get(i));
             }
             return C2;
 
         }
     }
-    
+
     public static Clustering kmeansAlgorithm(ArrayList<Point> P, ArrayList<Point> S, int k) {
         //Clustering primeClustering = ClusteringBuilder.Partition(P, S, k);
-        Clustering primeClustering =ClusteringBuilder.Partition_optimized(P, S, k,true,false,null);
+        Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k, true, false, null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
-        int cont=0;
+        int cont = 0;
         while (!stoppingCondition) {
             //Calcolo nuovo Clustering
             ArrayList<Point> centroids = primeClustering.getCentroids();
             //Clustering secondClustering = ClusteringBuilder.Partition(P, centroids, k);
-            Clustering secondClustering =ClusteringBuilder.Partition_optimized(P, centroids, k,false,false,primeClustering);
+            Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k, false, false, primeClustering);
             double phikmeans = secondClustering.kmeans();
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
             if (phi > phikmeans) {
@@ -493,23 +473,22 @@ public class ClusteringBuilder implements Serializable {
             }
             cont++;
         }
-        System.out.println("Cont KMeans: "+cont);
-        ClusteringBuilder.numIter=cont;
+//System.out.println("Cont KMeans: " + cont);
+        ClusteringBuilder.numIter = cont;
         return primeClustering;
     }
 
-    public static Clustering kmeansEuristic(ArrayList<Point> P, ArrayList<Point> S, int k) 
-    {
-        Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k,true,true,null);
+    public static Clustering kmeansEuristic(ArrayList<Point> P, ArrayList<Point> S, int k) {
+        Clustering primeClustering = ClusteringBuilder.Partition_optimized(P, S, k, true, true, null);
         boolean stopping_condition = false;
         double phi = primeClustering.kmeans();
         boolean stoppingCondition = false;
-        int cont=0;
+        int cont = 0;
         while (!stoppingCondition) {
             cont++;
             //Calcolo nuovo Clustering
             ArrayList<Point> centroids = primeClustering.getCentroids();
-            Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k,false,true,primeClustering);
+            Clustering secondClustering = ClusteringBuilder.Partition_optimized(P, centroids, k, false, true, primeClustering);
             double phikmeans = secondClustering.kmeans();
             //Valuto se quello nuovo è megliore rispetto a quello vecchio
             if (phi > phikmeans) {
@@ -518,11 +497,12 @@ public class ClusteringBuilder implements Serializable {
             } else {
                 stoppingCondition = true;
             }
-            if(cont>=ClusteringBuilder.numIter/2)break;
+            /*if (cont >= ClusteringBuilder.numIter / 2) {
+                break;
+            }*/
         }
-        System.out.println("Cont Euristico: "+cont);
+//System.out.println("Cont Euristico: " + cont);
         return primeClustering;
     }
-    
-    
+
 }

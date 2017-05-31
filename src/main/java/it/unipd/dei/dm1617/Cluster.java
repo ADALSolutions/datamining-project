@@ -20,19 +20,23 @@ public class Cluster implements Serializable
     private Point center; // centroid
     private String ID; // this can be useful
     public static int id_static=0;
-
-    public Cluster(ArrayList<Point> P) {
-            this(P,false);
+    
+    public Cluster(ArrayList<Point> P, Point center, boolean centroid) {
+        this.P = P;
+        this.center = center;
+        if (centroid) {this.center = this.calculateCentroid();}
+        ID = "Cluster" + String.valueOf(id_static);
+        id_static++;
     }
-    public Cluster(ArrayList<Point> P,boolean centroid) {
-            this.P =P;
-            if(centroid)this.center = this.calculateCentroid();
-            else this.center=null;
-            ID="Cluster"+String.valueOf(id_static);
-            id_static++;
+    public Cluster(ArrayList<Point> P, Point center) {
+        this(P, center, false);
+    }
+    public Cluster(ArrayList<Point> P) {
+        this(P, null, false);
     }
     public Cluster() {
-            this(new ArrayList<Point>(),false);    
+        //così il centro è a null
+            this(new ArrayList<Point>(),null,false);    
     } 
 	
     public ArrayList<Point>  getPoints() 
@@ -106,7 +110,7 @@ public class Cluster implements Serializable
         set.addAll(C2.getPoints());//nota:set non ammette duplicati
         ArrayList<Point> al=(ArrayList<Point>) new ArrayList<Point>();
         al.addAll(set);
-        Cluster union=new Cluster(al,false);//il suo centro non equivale al centroide
+        Cluster union=new Cluster(al);//il suo centro non equivale al centroide
         return union;
     }
     public String toString()
