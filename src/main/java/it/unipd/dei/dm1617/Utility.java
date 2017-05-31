@@ -5,6 +5,7 @@
  */
 package it.unipd.dei.dm1617;
 
+import Jama.EigenvalueDecomposition;
 import breeze.linalg.DenseMatrix;
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.spark.api.java.function.Function;
@@ -46,7 +48,6 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-
 /**
  *
  * @author DavideDP
@@ -156,12 +157,139 @@ public class Utility {
         }
         return dd;
     }
-    
+
+  public static Clustering  PCA( Clustering C,JavaSparkContext sc,int numComp,boolean normalize) throws Exception
+  {
+        ArrayList<Point> P = C.getPoints();
+        ArrayList<Point> centers = C.getCenters();
+        //Creo vettori
+        ArrayList<Vector> vectors = new ArrayList<Vector>();
+        for (Point p : P) {
+            Vector v = p.parseVector();
+            vectors.add(v);
+        }
+        //Trasformo vettori
+        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc.sc(), numComp,false, true);
+        //Creo punti
+        ArrayList<Point> pointsPCA = new ArrayList<Point>();
+        ArrayList<Point> centersPCA = new ArrayList<Point>();
+        for (int i=0;i<PCAs.size();i++)//vectors
+        {
+            Point add=new PointCentroid(vectors.get(i));
+            if(centers.contains(P.get(i)))
+            {
+                centersPCA.add(add);
+            }
+            pointsPCA.add(add);
+        }
+        
+        ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+        HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
+
+        for (int i = 0; i < C.getK(); i++) {
+            Cluster CL = new Cluster();
+            CL.setCenter(centers.get(i));
+            clusters.add(CL);
+        }
+        for(int i=0;i<P.size();i++)
+        {
+            Cluster get = C.getMap().get(P.get(i));
+            
+        }
+        return null;
+
+    }
+  
+  public static ArrayList<Point>  reducePointsDim(ArrayList<Point> P,SparkContext sc,int numComp)
+  {
+        ArrayList<Vector> vectors = new ArrayList<Vector>();
+        for (Point p : P) {
+            Vector v = p.parseVector();
+            vectors.add(v);
+        } 
+        ArrayList<Point> Pnew=new ArrayList<Point>();
+        for (Vector v : vectors)//vectors
+        {
+            double d[]=new double[numComp];
+            for(int i=0;i<numComp;i++)
+            {
+                d[i]=v.apply(i);
+            }
+            Vector dense = Vectors.dense(d);
+            Pnew.add(new PointCentroid(dense));
+        }
+        return Pnew;
+  }
+  public static ArrayList<Point>  PCAPoints(ArrayList<Point> P,SparkContext sc,int numComp,boolean optimal,boolean normalize) throws Exception
+  {  
+        ArrayList<Vector> vectors = new ArrayList<Vector>();
+        for (Point p : P) {
+            Vector v = p.parseVector();
+            vectors.add(v);
+        }
+        //Trasformo punti in vettori
+        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc,numComp,optimal,true);
+        //Trasformo vettori in punti, lo uso solo se voglio stampare il clustering fatto in 2d
+        ArrayList<Point> pointsPCA = new ArrayList<Point>();
+        for (Vector v : PCAs)//vectors
+        {
+            pointsPCA.add(new PointCentroid(v));
+        }
+        return pointsPCA;
+  }   
   public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc) throws Exception
   {  
-      return Utility.PCA(rowsList,sc,2,true);
-  }    
-  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc,int numComp,boolean normalize) throws Exception
+      return Utility.PCA(rowsList,sc,2,false,true);
+  } 
+//trova il numero ottimale di componenti  
+  public static int  optimalNumComp(RowMatrix mat ) throws Exception
+  {  
+      int numCols=(int) mat.numCols();
+      int numRows = (int) mat.numRows();
+      DenseMatrix<Object> toBreeze = mat.toBreeze();
+      double d[][]=new double[numRows][numCols];
+      for(int i=0;i<numRows;i++)
+      {
+          for(int j=0;j<numCols;j++)
+          {
+              d[i][j] =(Double) toBreeze.apply(i,j);
+              
+          }
+      }
+      Jama.Matrix M=new Jama.Matrix(d);
+      EigenvalueDecomposition e = M.eig();
+      double[] Eigenvalues = e.getRealEigenvalues(); 
+      ArrayList<Double> AL=new ArrayList<Double>();
+      double sum=0;
+      for(int i=0;i<Eigenvalues.length;i++)
+      {
+          if(Eigenvalues[i]>0){AL.add(Eigenvalues[i]);sum+=Eigenvalues[i];}
+      }
+      double dd[]=new double[AL.size()];
+      Object[] toArray = AL.toArray();
+      for(int i=0;i<toArray.length;i++)
+      {
+          dd[i]=(Double)toArray[i];   
+          //System.out.println(dd[i]/sum);
+      }
+      Arrays.sort(dd);
+      double acc=0;
+      int cont=0;    
+      for(int i=0;i<dd.length;i++)
+      {
+            acc+=dd[i];
+            if(acc/sum<0.95)
+            {
+                cont++;
+            }
+      }
+     return cont; 
+      
+  }  
+  //Data una lista di vettori restituisce i vettori dopo la PCA
+  //Se optimal=true allora sceglie il valore ottimale
+  //Se normalize è true allora fa la normalizzazione
+  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc,int numComp,boolean optimal,boolean normalize) throws Exception
   {     
     if(normalize)
     {
@@ -170,6 +298,8 @@ public class Utility {
     JavaRDD<Vector> rows = JavaSparkContext.fromSparkContext(sc).parallelize(rowsList);
     // Create a RowMatrix from JavaRDD<Vector>.
     RowMatrix mat = new RowMatrix(rows.rdd());
+    if(optimal)numComp=Utility.optimalNumComp(mat );
+    System.err.println("STOP");
     Matrix pc = mat.computePrincipalComponents(numComp); 
     RowMatrix projected = mat.multiply(pc);
 
@@ -267,7 +397,7 @@ public class Utility {
   
   public static JavaRDD<Point> leggiInput(String s,JavaSparkContext sc)
   {
-      JavaRDD<String> textFile = sc.textFile("input.txt");
+      JavaRDD<String> textFile = sc.textFile(s);
         JavaRDD<Point> points=textFile.map(
         (doc)->
         {

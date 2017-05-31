@@ -44,8 +44,11 @@ import org.apache.spark.mllib.linalg.BLAS;
  * given datase.
  */
 public class TransformInput {
-
-  public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
+  public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException 
+  {
+        sample2( args) ;
+  }
+  public static void mappiamo(String[] args) throws FileNotFoundException, IOException, InterruptedException {
 
     System.out.println("Sample");
     System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Esempi\\dm1617-project-stub");
@@ -121,7 +124,7 @@ System.out.println("Modello caricato");
       String[] op = load.org$apache$spark$mllib$feature$Word2VecModel$$wordList();
       for(String s:op)
       {
-          System.out.println(s+" : "+load.transform(s).toString());
+          System.out.println(s+" : "+load.transform(s).size());
       }
 
     while(true){}

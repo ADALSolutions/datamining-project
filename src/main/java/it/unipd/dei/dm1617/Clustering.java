@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.io.Serializable;
 import java.util.Random;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
@@ -251,5 +252,25 @@ public class Clustering implements Serializable
         //Cclone.additionalInformation=addInfoClone;
         return Cclone;
     }
+
+    public HashMap<Point, Cluster> getMap() {
+        return map;
+    }
+    
+    public void reduceDim(SparkContext sc,int numComp)
+    {
+        ArrayList<Point> reducePointsDim = Utility.reducePointsDim(P, sc, numComp);
+        for(int i=0;i<P.size();i++)
+        {
+            ((PointCentroid)P.get(i)).assignVector(reducePointsDim.get(i).parseVector());
+        }
+        reducePointsDim = Utility.reducePointsDim(getCenters(), sc, numComp);
+        for(int i=0;i<reducePointsDim.size();i++)
+        {
+            ((PointCentroid)clusters.get(i).getCenter()).assignVector(reducePointsDim.get(i).parseVector());
+        }        
+    }
+    
+    
 
 }

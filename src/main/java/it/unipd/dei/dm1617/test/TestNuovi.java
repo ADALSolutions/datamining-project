@@ -24,6 +24,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.mllib.feature.Word2VecModel;
 import scala.Tuple2;
 
+
 /**
  *
  * @author DavideDP
@@ -31,7 +32,35 @@ import scala.Tuple2;
 public class TestNuovi {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, Exception {
-        testPCA_avanzato(args);
+        testPCA_avanzato2(args);
+    }
+    //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio clustering con d=7 e poi stampando su d=2 ottengo gli stessi risultati/gruppi
+    public static void testPCA_avanzato2(String[] args) throws FileNotFoundException, IOException, Exception {
+        System.out.println("MyFirstTest");
+        System.setProperty("hadoop.home.dir", "C:\\Users\\DavideDP\\Desktop\\ProjectDM\\Workspace\\datamining-project");
+        SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
+        JavaSparkContext sc = new JavaSparkContext(sparkConf);
+        //GESTIONE INPUT IN MANIERA PARALLELA
+        JavaRDD<Point> points = Utility.leggiInput("input13.txt", sc);
+
+        //STAMPO INFO
+        int k = 3;
+        System.out.println("Total points : " + points.count());
+        System.out.println("Total clusters : " + k);
+        List<Point> AL=points.collect();
+        ArrayList<Point> P=new ArrayList<Point>();
+        P.addAll(AL);
+        P= Utility.PCAPoints(P, sc.sc(), 13,false, true);
+        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
+        ArrayList<Point> P7=Utility.reducePointsDim(P, sc.sc(), 2);
+        ArrayList<Point> S7=Utility.reducePointsDim(S, sc.sc(), 2);
+        Clustering C = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P7, S7, k);
+        C.reduceDim(sc.sc(),2);
+        C2.reduceDim(sc.sc(),2);
+        //Scrivo il clustering
+        Utility.writeOuptut("output.txt", C);
+        Utility.writeOuptut("output2.txt", C2);
     }
     
     //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio il pca per stamparlo in 2d funziona tutto
@@ -42,7 +71,7 @@ public class TestNuovi {
         SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
         //GESTIONE INPUT IN MANIERA PARALLELA
-        JavaRDD<Point> points = Utility.leggiInput("input.txt", sc);
+        JavaRDD<Point> points = Utility.leggiInput("input13.txt", sc);
 
         //STAMPO INFO
         int k = 3;
