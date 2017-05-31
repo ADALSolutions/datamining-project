@@ -56,11 +56,11 @@ public class TestNuovi {
         SparkConf sparkConf = new SparkConf(true).setAppName("Test PCA");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
         JavaRDD<Point> points = Utility.leggiInput("Iris.txt", sc);
-        int k=5;
+        int k=20;
         List<Point> coll = points.collect();
         ArrayList<Point> P=new ArrayList<Point>(coll.size());
         P.addAll(coll);
-        P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
+        //P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
         //ArrayList<Point> S = Utility.initMedianCenters(P, k);
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
         System.out.println(S.size());
@@ -77,12 +77,12 @@ public class TestNuovi {
         testKMeansEuristico2(P,S,k);
         testKMeans2(P,S,k);
         testKMeansEuristico2(P,S,k);
-        
+       
         testKMeans2(P,S,k);
         testKMeansEuristico2(P,S,k);
         testKMeans2(P,S,k);
         testKMeansEuristico2(P,S,k);
-        //testKMeansEuristico2(P,S,k);
+        testKMeansEuristico2(P,S,k);
     }
     //serve per valutare se io faccio il clustering su datset con dimensioni=13 e poi faccio clustering con d=7 e poi stampando su d=2 ottengo gli stessi risultati/gruppi
     
