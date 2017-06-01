@@ -94,14 +94,13 @@ public class Clustering implements Serializable {
     }
 
     public void addCluster(Cluster cl) {
+        //ipotizzo che i punti dentro al cluster
+        //siano gia dentro all'ArrayList di Punti del Clustering
         clusters.add(cl);
         ArrayList<Point> points = cl.getPoints();
         for (Point p : points) {
-            boolean add = this.addPoint(p, cl);
-            if (add == false) {
-                this.removePoint(p);
-                this.addPoint(p, cl);
-            }
+            map.put(p, cl);//per come ci serve va bene così;
+            
         }
     }
 
@@ -262,5 +261,26 @@ public class Clustering implements Serializable {
             ((PointCentroid) clusters.get(i).getCenter()).assignVector(reducePointsDim.get(i).parseVector());
         }
     }
+    
+    public static void setCenters(ArrayList<Cluster> clusters, ArrayList<Point> S) {
+
+		if (clusters.size() != S.size()) {
+			throw new IllegalArgumentException("Clusters and Centroids Lists must have same size k ");
+		}
+		for (int i = 0; i < S.size(); i++) {
+			clusters.get(i).setCenter(S.get(i));
+		}
+	}
+    
+	public static void assignClusters(ArrayList<Cluster> clusters, ArrayList<Point> S, ArrayList<Point> P, HashMap<Point, Cluster> map){
+		for (Point p : P) {
+			Vector parseVector = p.parseVector();
+			Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
+			Cluster C = clusters.get(mostClose._1);
+			map.put(p, C);
+			C.getPoints().add(p);
+			p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
+		}
+	}
 
 }

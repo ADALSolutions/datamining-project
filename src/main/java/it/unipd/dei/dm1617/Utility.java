@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -510,6 +511,96 @@ public class Utility {
            P.add(p.copy());
        }
        return P;
+  }
+ 
+    public static Clustering ORC(int numIterations,double threshold,ArrayList<Point> P) throws IOException
+  {
+      int init=P.size();
+      ArrayList<Point> removeAll=new ArrayList<Point> ();
+      Clustering C=XMeans.XMeans(P, ClusteringBuilder.kmeansPlusPlus(P, 2), 2, 20);
+      for(int i=0;i<numIterations;i++)
+      {
+          System.out.println("Entro For");
+          for(Cluster CL:C.getClusters())
+          {
+            ArrayList<Point> points = CL.getPoints();
+            //double dmax=Collections.max(points).getDist();
+            Tuple2<Double, Double> t = Utility.varianceMedia(points);
+            double std=Math.sqrt(t._2);
+            double media=t._1;
+            ArrayList<Point> remove=new ArrayList<Point>();
+            //System.out.println("dmax: "+dmax);
+            //System.out.println("variance: "+std);
+            for(int j=0;j<points.size();j++)
+            {
+                //System.out.println(("ratio: "+points.get(j).getDist() /dmax));
+                if( (points.get(j).getDist()-media)>(threshold*std))
+                {
+                    
+                    remove.add(points.get(j));        
+                }
+            }
+            //System.out.println("#rimozioni: "+remove.size());
+            removeAll.addAll(remove);
+            for(Point p:remove){C.removePoint(p);}
+            C=ClusteringBuilder.kmeansAlgorithm(P, C.getCentroids(), C.getK());
+          }
+
+      }
+      System.out.println("Diff: "+(init-C.getPoints().size()));
+      Clustering output=ClusteringBuilder.kmeansAlgorithm(removeAll, ClusteringBuilder.kmeansPlusPlus(removeAll,1), 1);
+      Utility.writeOuptut("output.txt", output);
+      return C;
+      
+  }
+    
+  public static Clustering ORC_old(int numIterations,double threshold,ArrayList<Point> P) throws IOException
+  {
+      
+      Clustering C=XMeans.XMeans(P, ClusteringBuilder.kmeansPlusPlus(P, 2), 2, 20);
+      for(int i=0;i<numIterations;i++)
+      {
+          System.out.println("Entro For");
+          ArrayList<Point> points = C.getPoints();
+          double dmax=Collections.max(points).getDist();
+          Tuple2<Double, Double> t = Utility.varianceMedia(points);
+          double std=Math.sqrt(t._2);
+          double media=t._1;
+          ArrayList<Point> remove=new ArrayList<Point>();
+          System.out.println("dmax: "+dmax);
+          System.out.println("variance: "+std);
+          for(int j=0;j<points.size();j++)
+          {
+               System.out.println(("ratio: "+points.get(j).getDist() /dmax));
+              if( (points.get(j).getDist()-media)>(threshold*std))
+              {
+                  System.out.println("rimuovo");
+                  remove.add(points.get(j));        
+              }
+          }
+          P.removeAll(remove);
+          C=ClusteringBuilder.kmeansAlgorithm(P, C.getCentroids(), C.getK());
+
+      }
+      return C;
+      
+  }
+  
+  public static Tuple2<Double,Double> varianceMedia(List<Point> points)
+  {
+            double sum=0;
+            double sum2=0;
+          for(int j=0;j<points.size();j++)
+          {
+              sum+=points.get(j).getDist();
+              sum2+=Math.pow(points.get(j).getDist(),2);
+              
+          }
+          sum=sum/points.size();
+          sum2=sum2/points.size();
+          double var=sum2-Math.pow(sum,2);
+          return new Tuple2(sum,var);
+      
   }
     
     
