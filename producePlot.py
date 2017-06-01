@@ -26,14 +26,14 @@ f.close()
 fontP = FontProperties()
 fontP.set_size('small')
 keys=list(diz.keys())
-colors=['red', 'black', 'yellow','green','purple','aqua','darkgreen','lightsalmon','orange','darkgray',
-        'blue','gold','skyblue','lawngreen','sienna','darkorchid','y','springgreen','orangered','sandybrown']
-#colors=iter(cm.rainbow(np.linspace(0, 1, len(keys))))
+#colors=['red', 'black', 'yellow','green','purple','aqua','darkgreen','lightsalmon','orange','darkgray',
+        #'blue','gold','skyblue','lawngreen','sienna','darkorchid','y','springgreen','orangered','sandybrown']
+colors=iter(cm.rainbow(np.linspace(0, 1, len(keys))))
 
 print(keys)
 for i in range(0,len(keys),1) :
     (listax,listay)=diz[keys[i]]
-    plt.scatter(listax,listay,label=keys[i],color=colors[i])#=next(colors)
+    plt.scatter(listax,listay,label=keys[i],color=next(colors))#=next(colors) 		=colors[i]
 
 #IMPOSTO limiti assi
 xmax=max(xList)
