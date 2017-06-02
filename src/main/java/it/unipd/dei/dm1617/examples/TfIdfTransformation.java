@@ -79,7 +79,7 @@ public class TfIdfTransformation {
 
     // Finally, we print the distance between the first two pages
     List<Tuple2<WikiPage, Vector>> firstPages = pagesAndVectors.take(2);
-    double dist = Distance.calculateDistance(firstPages.get(0)._2(), firstPages.get(1)._2(),"kcenter");
+    double dist = Distance.calculateDistance(firstPages.get(0)._2(), firstPages.get(1)._2());//,"kcenter");
     
 	
 	
