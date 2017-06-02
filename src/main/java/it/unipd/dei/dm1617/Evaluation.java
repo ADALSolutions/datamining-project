@@ -22,14 +22,6 @@ import scala.Tuple2;
  */
 public class Evaluation {
 	
-    public static Vector generateRandomVector(int size) {
-        double dd[] = new double[size];
-        Random r = new Random();
-        for(int i = 0; i < size; i++) {
-            dd[i] = r.nextDouble()*Double.MAX_VALUE;
-        }
-        return Vectors.dense(dd);
-    }
         /*If H is close to 0, then P is likely to have a clustering structure, while if
         H is close to 1, then the points of P are likely to be well (i.e., regularly)
         spaced. If H is close to 0:5, then P is likely to be a random set.*/    
@@ -41,7 +33,7 @@ public class Evaluation {
         int sizeVector = X.get(0).parseVector().size();
         for(int i = 0; i < t; i++) {
             //genero numeri troppo grandi secondo me
-            generated.add(new PointSpark(Evaluation.generateRandomVector(sizeVector)));
+            generated.add(new PointSpark(Utility.generateRandomVector(sizeVector)));
         }
         //CALCOLO w_i e u_i
         //P.removeAll(X);//credo vadano tolti altrimenti per se stesso il punto ha dist=0
@@ -50,11 +42,11 @@ public class Evaluation {
         for(int i = 0; i < t; i++) {
             Point x = X.get(i);
             Point y = generated.get(i);
-            double minw = Distance.calculateDistance(P.get(0).parseVector(), x.parseVector(), "standard");
-            double minu = Distance.calculateDistance(P.get(0).parseVector(), y.parseVector(), "standard");
+            double minw = Distance.calculateDistance(P.get(0).parseVector(), x.parseVector());
+            double minu = Distance.calculateDistance(P.get(0).parseVector(), y.parseVector());
             for(int j = 1; j < P.size(); j++) {
-                double distw = Distance.calculateDistance(P.get(j).parseVector(), x.parseVector(), "standard");
-                double distu = Distance.calculateDistance(P.get(j).parseVector(), y.parseVector(), "standard");
+                double distw = Distance.calculateDistance(P.get(j).parseVector(), x.parseVector());
+                double distu = Distance.calculateDistance(P.get(j).parseVector(), y.parseVector());
                 if(distw < minw && P.get(0).equals(x)==false) {
                 	minw = distw;
                 }
