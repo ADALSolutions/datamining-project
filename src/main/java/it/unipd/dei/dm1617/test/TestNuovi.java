@@ -81,7 +81,7 @@ public class TestNuovi
         System.out.println("Tempo old: "+(end1-start1));        
  
         start2=System.nanoTime();
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
         end2=System.nanoTime();
         System.out.println("Tempo nuovo: "+(end2-start2));   
         
@@ -107,7 +107,7 @@ public class TestNuovi
             ArrayList<Point> copyS = Utility.copy(S);
 
             start2=System.currentTimeMillis();
-            Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+            Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
             end2=System.currentTimeMillis();
             sumPhi+=C2.kmeans();
             sumTime+=(end2-start2);
@@ -129,7 +129,7 @@ public class TestNuovi
             ArrayList<Point> copyS = Utility.copy(S); 
 
             start1=System.currentTimeMillis();
-            Clustering C = ClusteringBuilder.kmeansEuristic(copyP,copyS , k);
+            Clustering C = ClusteringBuilder.kmeansEuristic_old(copyP,copyS , k);
             end1=System.currentTimeMillis();
             sumPhi+=C.kmeans();
             sumTime+=(end1-start1);
@@ -165,7 +165,7 @@ public class TestNuovi
         System.out.println("Tempo old: "+(end1-start1));        
  
         start2=System.currentTimeMillis();
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
         end2=System.currentTimeMillis();
         System.out.println("Tempo nuovo: "+(end2-start2));   
         

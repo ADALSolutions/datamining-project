@@ -1,7 +1,5 @@
 package it.unipd.dei.dm1617;
 
-import it.unipd.dei.dm1617.Distance;
-
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
 

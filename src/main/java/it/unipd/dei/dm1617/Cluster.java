@@ -15,6 +15,7 @@ import org.apache.spark.mllib.linalg.Vectors;
 import scala.Tuple2;
 
 public class Cluster implements Serializable {
+
 	// Assuming Center-based Cluster
 	private ArrayList<Point> P; // Points that belong to the Cluster
 	private Point center; // centroid
@@ -61,14 +62,11 @@ public class Cluster implements Serializable {
 		this.center = c;
 	}
 
-	
-	
-
-
 	public Point calculateCentroid() {
 		// se p.size==0 raise exception
-		if (P.size() == 0)
+		if (P.size() == 0) {
 			return new PointCentroid(Vectors.zeros(2));
+		}
 		Vector y = Vectors.zeros(P.get(0).parseVector().size());
 		for (int i = 0; i < this.P.size(); i++) {
 			BLAS.axpy(1, P.get(i).parseVector(), y);
@@ -90,14 +88,17 @@ public class Cluster implements Serializable {
 			if (!p.equals(P.get(i))) {
 				// dovrebbe essere euclidean distance con r=1
 				sum += Distance.calculateDistance(p.parseVector(), P.get(i).parseVector(), "standard");
-			} else {
+			}
+			else {
 				present = true;
 			}
 		}
-		if (present)
+		if (present) {
 			length = P.size() - 1;
-		else
+		}
+		else {
 			length = P.size();
+		}
 		return sum / length;
 	}
 
@@ -119,7 +120,7 @@ public class Cluster implements Serializable {
 		ArrayList<Point> al = (ArrayList<Point>) new ArrayList<Point>();
 		al.addAll(set);
 		Cluster union = new Cluster(al);// il suo centro non equivale al
-										// centroide
+		// centroide
 		return union;
 	}
 
@@ -137,68 +138,27 @@ public class Cluster implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		Cluster other = (Cluster) obj;
 		if (ID == null) {
-			if (other.ID != null)
+			if (other.ID != null) {
 				return false;
-		} else if (!ID.equals(other.ID))
+			}
+		}
+		else if (!ID.equals(other.ID)) {
 			return false;
+		}
 		return true;
 	}
 
-<<<<<<< HEAD
-    public String getID() {
-        return ID;
-    }
-
-    public void setID(String ID) {
-        this.ID = ID;
-    }
-    
-    
-    //kmeans eseguito in parallelo per un cluster
-    public static double kmeansMR(JavaRDD<Point> points, Broadcast<Point> Bcenter) 
-    {
-        Point center = Bcenter.value();
-        JavaRDD<Double> map1 = points.map((p)->{return Math.pow(Distance.calculateDistance(p.parseVector(), center.parseVector(), "standard"),2);});
-        Double reduce = map1.reduce((Double d1,Double d2)->{return d1+d2;});
-        return reduce;
-    }  
-    
-    public static Clustering promoteClustering(Cluster CL)
-    {
-        Cluster C=new Cluster(CL.getPoints());
-        C.setCenter(CL.getCenter());
-        HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
-        for(Point p:C.getPoints())
-        {
-            map.put(p, CL);
-        }
-        ArrayList<Cluster> clusters=new ArrayList<Cluster>();
-        clusters.add(C);
-        ArrayList<Point> centers=new ArrayList<Point> ();
-        centers.add(CL.getCenter());
-        return new Clustering(CL.getPoints(),clusters,centers  ,map);
-        
-    }
-    
-    public double kmeans() 
-        {
-        double sum = 0;
-        for (Point p:getPoints()) {
-            sum += Math.pow(Distance.calculateDistance(center.parseVector(), p.parseVector(), "standard"), 2);
-        }
-        return sum;
-    }
-    
- 
-=======
 	public String getID() {
 		return ID;
 	}
@@ -207,7 +167,7 @@ public class Cluster implements Serializable {
 		this.ID = ID;
 	}
 
-	// kmeans eseguito in parallelo per un cluster
+	//kmeans eseguito in parallelo per un cluster
 	public static double kmeansMR(JavaRDD<Point> points, Broadcast<Point> Bcenter) {
 		Point center = Bcenter.value();
 		JavaRDD<Double> map1 = points.map((p) -> {
@@ -219,5 +179,27 @@ public class Cluster implements Serializable {
 		return reduce;
 	}
 
->>>>>>> origin/master
+	public static Clustering promoteClustering(Cluster CL) {
+		Cluster C = new Cluster(CL.getPoints());
+		C.setCenter(CL.getCenter());
+		HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
+		for (Point p : C.getPoints()) {
+			map.put(p, CL);
+		}
+		ArrayList<Cluster> clusters = new ArrayList<Cluster>();
+		clusters.add(C);
+		ArrayList<Point> centers = new ArrayList<Point>();
+		centers.add(CL.getCenter());
+		return new Clustering(CL.getPoints(), clusters, centers, map);
+
+	}
+
+	public double kmeans() {
+		double sum = 0;
+		for (Point p : getPoints()) {
+			sum += Math.pow(Distance.calculateDistance(center.parseVector(), p.parseVector(), "standard"), 2);
+		}
+		return sum;
+	}
+
 }

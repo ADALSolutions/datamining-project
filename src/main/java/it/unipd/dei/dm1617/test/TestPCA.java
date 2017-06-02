@@ -44,8 +44,8 @@ public class TestPCA {
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
         ArrayList<Point> P7 = Utility.reducePointsDim(P, sc.sc(), 2);
         ArrayList<Point> S7 = Utility.reducePointsDim(S, sc.sc(), 2);
-        Clustering C = ClusteringBuilder.kmeansAlgorithm(P, S, k);
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(P7, S7, k);
+        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P7, S7, k);
         C.reduceDim(sc.sc(), 2);
         C2.reduceDim(sc.sc(), 2);
         //Scrivo il clustering
@@ -72,7 +72,7 @@ public class TestPCA {
         P.addAll(AL);
         //Eseguo clustering su dati con D=13
         ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
-        Clustering C = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
         //Trasformo punti in vettori
         ArrayList<Vector> vectors = new ArrayList<Vector>();
         for (Point p : P) {
@@ -95,7 +95,7 @@ public class TestPCA {
             ((PointCentroid) P.get(i)).assignVector(PCAs.get(i));
         }
         //S è stato modificato nel for qui sopra quindi posso usarlo come cenri per il clustering 2d
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm(pointsPCA, S, k);
+        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(pointsPCA, S, k);
 
         //Scrivo il clustering
         Utility.writeOuptut("output.txt", C);
@@ -131,7 +131,7 @@ public class TestPCA {
         {
             pointsPCA.add(new PointCentroid(v));
         }
-        Clustering C = ClusteringBuilder.kmeansAlgorithm(pointsPCA, ClusteringBuilder.getRandomCenters(pointsPCA, k), k);
+        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(pointsPCA, ClusteringBuilder.getRandomCenters(pointsPCA, k), k);
         Utility.writeOuptut("output.txt", C);
     }
 

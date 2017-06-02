@@ -63,7 +63,7 @@ public class XMeans
         {
             System.out.println("Eseguo:"+comp);
             comp++;          
-            clustering = ClusteringBuilder.kmeansAlgorithm(P, S, k);
+            clustering = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
             Utility.writeOuptut("outputBeforeSplit"+String.valueOf(comp)+".txt", clustering);
             //Improve Structure
             ArrayList<Cluster> clustersOld = (ArrayList<Cluster>)clustering.getClusters().clone();
@@ -75,7 +75,7 @@ public class XMeans
                 double oldBIC = XMeans.BIC(cluster,clustering.getM());
                 int kSplit=2;
                 ArrayList<Point> SSplit = ClusteringBuilder.kmeansPlusPlus(cluster.getPoints(), kSplit);
-                Clustering clusteringSplit = ClusteringBuilder.kmeansAlgorithm(cluster.getPoints(), SSplit, kSplit);
+                Clustering clusteringSplit = ClusteringBuilder.kmeansAlgorithm_old(cluster.getPoints(), SSplit, kSplit);
                 double newBIC = XMeans.BIC(clusteringSplit);
                 if(oldBIC<newBIC)
                 {

@@ -543,12 +543,12 @@ public class Utility {
             //System.out.println("#rimozioni: "+remove.size());
             removeAll.addAll(remove);
             for(Point p:remove){C.removePoint(p);}
-            C=ClusteringBuilder.kmeansAlgorithm(P, C.getCentroids(), C.getK());
+            C=ClusteringBuilder.kmeansAlgorithm_old(P, C.getCentroids(), C.getK());
           }
 
       }
       System.out.println("Diff: "+(init-C.getPoints().size()));
-      Clustering output=ClusteringBuilder.kmeansAlgorithm(removeAll, ClusteringBuilder.kmeansPlusPlus(removeAll,1), 1);
+      Clustering output=ClusteringBuilder.kmeansAlgorithm_old(removeAll, ClusteringBuilder.kmeansPlusPlus(removeAll,1), 1);
       Utility.writeOuptut("output.txt", output);
       return C;
       
@@ -579,7 +579,7 @@ public class Utility {
               }
           }
           P.removeAll(remove);
-          C=ClusteringBuilder.kmeansAlgorithm(P, C.getCentroids(), C.getK());
+          C=ClusteringBuilder.kmeansAlgorithm_old(P, C.getCentroids(), C.getK());
 
       }
       return C;
