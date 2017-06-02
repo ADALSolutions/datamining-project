@@ -5,10 +5,13 @@
  */
 package it.unipd.dei.dm1617.test;
 
+import it.unipd.dei.dm1617.CentersBuilder;
 import it.unipd.dei.dm1617.Clustering;
 import it.unipd.dei.dm1617.ClusteringBuilder;
+import it.unipd.dei.dm1617.KMeans;
+import it.unipd.dei.dm1617.PCA;
 import it.unipd.dei.dm1617.Point;
-import it.unipd.dei.dm1617.PointCentroid;
+import it.unipd.dei.dm1617.PointSpark;
 import it.unipd.dei.dm1617.Utility;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,12 +43,12 @@ public class TestPCA {
         List<Point> AL = points.collect();
         ArrayList<Point> P = new ArrayList<Point>();
         P.addAll(AL);
-        P = Utility.PCAPoints(P, sc.sc(), 13, false, false);
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
-        ArrayList<Point> P7 = Utility.reducePointsDim(P, sc.sc(), 2);
-        ArrayList<Point> S7 = Utility.reducePointsDim(S, sc.sc(), 2);
-        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P7, S7, k);
+        P = PCA.PCAPoints(P, sc.sc(), 13, false, false);
+        ArrayList<Point> S = CentersBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
+        ArrayList<Point> P7 = PCA.reducePointsDim(P, sc.sc(), 2);
+        ArrayList<Point> S7 = PCA.reducePointsDim(S, sc.sc(), 2);
+        Clustering C = KMeans.kmeansAlgorithm(P, S, k);
+        Clustering C2 = KMeans.kmeansAlgorithm(P7, S7, k);
         C.reduceDim(sc.sc(), 2);
         C2.reduceDim(sc.sc(), 2);
         //Scrivo il clustering
@@ -71,8 +74,8 @@ public class TestPCA {
         ArrayList<Point> P = new ArrayList<Point>();
         P.addAll(AL);
         //Eseguo clustering su dati con D=13
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
-        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+        ArrayList<Point> S = CentersBuilder.getRandomCenters(P, k);//USO STESSO S PER ENTRAMBI
+        Clustering C = KMeans.kmeansAlgorithm(P, S, k);
         //Trasformo punti in vettori
         ArrayList<Vector> vectors = new ArrayList<Vector>();
         for (Point p : P) {
@@ -81,21 +84,21 @@ public class TestPCA {
         }
         System.out.println("---------------------------");
         //Trasformo vettori con PCA
-        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc.sc());
+        ArrayList<Vector> PCAs = PCA.PCA(vectors, sc.sc());
         //Trasformo vettori in punti, lo uso solo se voglio stampare il clustering fatto in 2d
         ArrayList<Point> pointsPCA = new ArrayList<Point>();
         for (Vector v : PCAs)//vectors
         {
-            pointsPCA.add(new PointCentroid(v));
+            pointsPCA.add(new PointSpark(v));
         }
 
         //A ogni punto gli associo i punti-2d con il raggruppamento invariato dei clusters
         for (int i = 0; i < P.size(); i++) {
 
-            ((PointCentroid) P.get(i)).assignVector(PCAs.get(i));
+            ((PointSpark) P.get(i)).assignVector(PCAs.get(i));
         }
         //S è stato modificato nel for qui sopra quindi posso usarlo come cenri per il clustering 2d
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(pointsPCA, S, k);
+        Clustering C2 = KMeans.kmeansAlgorithm(pointsPCA, S, k);
 
         //Scrivo il clustering
         Utility.writeOuptut("output.txt", C);
@@ -122,16 +125,16 @@ public class TestPCA {
             //System.out.println(v);
         }
         System.out.println("---------------------------");
-        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc.sc());
+        ArrayList<Vector> PCAs = PCA.PCA(vectors, sc.sc());
         for (int i = 0; i < PCAs.size(); i++) {
             //System.out.println(vectors.get(i)+"->\n"+PCAs.get(i));
         }
         ArrayList<Point> pointsPCA = new ArrayList<Point>();
         for (Vector v : PCAs)//vectors
         {
-            pointsPCA.add(new PointCentroid(v));
+            pointsPCA.add(new PointSpark(v));
         }
-        Clustering C = ClusteringBuilder.kmeansAlgorithm_old(pointsPCA, ClusteringBuilder.getRandomCenters(pointsPCA, k), k);
+        Clustering C = KMeans.kmeansAlgorithm(pointsPCA, CentersBuilder.getRandomCenters(pointsPCA, k), k);
         Utility.writeOuptut("output.txt", C);
     }
 

@@ -2,7 +2,7 @@
  *
  * @author DavideDP
  */
-package it.unipd.dei.dm1617.examples;
+package it.unipd.dei.dm1617.test;
 
 import it.unipd.dei.dm1617.InputOutput;
 import it.unipd.dei.dm1617.WikiPage;

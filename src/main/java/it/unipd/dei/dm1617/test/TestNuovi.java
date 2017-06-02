@@ -1,11 +1,13 @@
 package it.unipd.dei.dm1617.test;
 
+import it.unipd.dei.dm1617.CentersBuilder;
 import it.unipd.dei.dm1617.Cluster;
 import it.unipd.dei.dm1617.Clustering;
 import it.unipd.dei.dm1617.ClusteringBuilder;
 import it.unipd.dei.dm1617.ClusteringBuilderMR;
+import it.unipd.dei.dm1617.KMeans;
 import it.unipd.dei.dm1617.Point;
-import it.unipd.dei.dm1617.PointCentroid;
+import it.unipd.dei.dm1617.PointSpark;
 import it.unipd.dei.dm1617.Utility;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,7 +41,7 @@ public class TestNuovi
         
         int k=5;
         //ArrayList<Point> S = Utility.initMedianCenters(P, k);
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
+        ArrayList<Point> S = CentersBuilder.getRandomCenters(P, k);
         System.out.println(S.size());
         
         /*testKMeansEuristicoNormale3(P,S,k);
@@ -81,7 +83,7 @@ public class TestNuovi
         System.out.println("Tempo old: "+(end1-start1));        
  
         start2=System.nanoTime();
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+        Clustering C2 = KMeans.kmeansAlgorithm(P, S, k);
         end2=System.nanoTime();
         System.out.println("Tempo nuovo: "+(end2-start2));   
         
@@ -107,7 +109,7 @@ public class TestNuovi
             ArrayList<Point> copyS = Utility.copy(S);
 
             start2=System.currentTimeMillis();
-            Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+            Clustering C2 = KMeans.kmeansAlgorithm(P, S, k);
             end2=System.currentTimeMillis();
             sumPhi+=C2.kmeans();
             sumTime+=(end2-start2);
@@ -129,7 +131,7 @@ public class TestNuovi
             ArrayList<Point> copyS = Utility.copy(S); 
 
             start1=System.currentTimeMillis();
-            Clustering C = ClusteringBuilder.kmeansEuristic_old(copyP,copyS , k);
+            Clustering C = KMeans.kmeansEuristic(copyP,copyS , k);
             end1=System.currentTimeMillis();
             sumPhi+=C.kmeans();
             sumTime+=(end1-start1);
@@ -150,7 +152,7 @@ public class TestNuovi
         P.addAll(coll);
         //P= Utility.PCAPoints(P, sc.sc(), 13,true, true);
         //ArrayList<Point> S = Utility.initMedianCenters(P, k);
-        ArrayList<Point> S = ClusteringBuilder.getRandomCenters(P, k);
+        ArrayList<Point> S = CentersBuilder.getRandomCenters(P, k);
         System.out.println(S.size());
         long start1,end1,start2,end2;
         
@@ -165,7 +167,7 @@ public class TestNuovi
         System.out.println("Tempo old: "+(end1-start1));        
  
         start2=System.currentTimeMillis();
-        Clustering C2 = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+        Clustering C2 = KMeans.kmeansAlgorithm(P, S, k);
         end2=System.currentTimeMillis();
         System.out.println("Tempo nuovo: "+(end2-start2));   
         
@@ -189,7 +191,7 @@ public class TestNuovi
         for (int i = 0; i < p.length; i++) {
             a.add((double) p[i]);
         }
-        PointCentroid point = new PointCentroid(a);
+        PointSpark point = new PointSpark(a);
         System.out.println("Size del Point: " + ObjectSizeCalculator.getObjectSize(point));
         System.out.println("Size del Vector di spark : " + ObjectSizeCalculator.getObjectSize(point.parseVector()));
         //System.out.println("Size dell' ArrayList : "+ObjectSizeCalculator.getObjectSize(point.point));
