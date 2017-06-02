@@ -9,7 +9,7 @@ import org.apache.spark.mllib.linalg.Vector;
 
 public class Distance {
 
-    public static String type="standard";
+
   /**
    * Cosine distance between vectors where all the elements are positive.
 	   */
@@ -49,7 +49,6 @@ public class Distance {
 	public static double euclideanDistance(Vector a, Vector b, int r)
 	{
 	    if (a.size() != b.size()) {
-                System.out.println("a: "+a.size()+"   b: "+b.size());
 	      throw new IllegalArgumentException("Vectors should be in the same space");
 	    }
 	  Vector c = b.copy();  //b
@@ -139,9 +138,7 @@ insertions that must be applied to transform X into Y .
      return 2 * Math.sqrt(a.size());
    }
    
-   public static double calculateDistance(Vector a, Vector b) 
-   {
-          String distance=Distance.type;
+   public static double calculateDistance(Vector a, Vector b, String distance) {
 	  if (distance.equals("cosine")){
 		  return Distance.cosineDistance(a, b);
 	  }
