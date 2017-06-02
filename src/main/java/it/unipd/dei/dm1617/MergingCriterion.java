@@ -99,7 +99,7 @@ public class MergingCriterion {
         double min = Double.MIN_VALUE;
         for(Point p : C1.getPoints()) {
             for(Point q : C2.getPoints()) {
-                double dist = Distance.calculateDistance(p.parseVector(), q.parseVector(), "standard");
+                double dist = Distance.calculateDistance(p.parseVector(), q.parseVector());
                 if(dist < min) {
                 	min = dist;
                 }
@@ -112,7 +112,7 @@ public class MergingCriterion {
         double max = -1;
         for(Point p : C1.getPoints()) {
             for(Point q : C2.getPoints()) {
-                double dist = Distance.calculateDistance(p.parseVector(), q.parseVector(), "standard");
+                double dist = Distance.calculateDistance(p.parseVector(), q.parseVector());
                 if(dist > max) {
                 	max = dist;
                 }
@@ -125,7 +125,7 @@ public class MergingCriterion {
         double sum = 0;
         for(Point p : C1.getPoints()) {
             for(Point q : C2.getPoints()) {
-                sum += Distance.calculateDistance(p.parseVector(), q.parseVector(), "standard");     
+                sum += Distance.calculateDistance(p.parseVector(), q.parseVector());     
             }
         }
         return sum / (C1.getPoints().size() * C2.getPoints().size());      
