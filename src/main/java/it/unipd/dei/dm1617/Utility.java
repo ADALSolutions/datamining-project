@@ -15,8 +15,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -56,68 +58,6 @@ import org.apache.spark.sql.types.StructType;
  */
 public class Utility {
 
-    public static ArrayList<Point> initMedianCenters(ArrayList<Point> points,int k) 
-    {
-        ArrayList<Point> P=(ArrayList<Point>)points.clone();
-        ArrayList<Cluster> clusters = new ArrayList<Cluster>();
-        for (int i = 0; i < k; i++) {
-            Cluster C = new Cluster();
-            clusters.add(C);
-        }
-        Random r=new Random();
-        int l=P.size()/k;
-        for (int i = 0; i <k; i++) 
-        {
-            for(int j=0;j<l;j++)
-            {
-                int nextInt = r.nextInt(P.size());     
-                Point p=P.get(nextInt);
-                clusters.get(i).getPoints().add(p);
-                P.remove(nextInt);
-            }  
-        }
-        clusters.get(clusters.size()-1).getPoints().addAll(P);
-        for (int i = 0; i < k; i++) {
-            Cluster C=clusters.get(i);
-            C.setCenter(C.calculateCentroid());
-        } 
-        ArrayList<Double> sums=new ArrayList<Double>();
-        for (int i = 0; i <k; i++) 
-        {
-            Cluster C=clusters.get(i);
-            double sum=0;
-            for(int j=0;j<C.getPoints().size();j++)
-            {
-                double dist=Distance.calculateDistance( C.getPoints().get(j).parseVector(),C.getCenter().parseVector(),"standard");
-                C.getPoints().get(j).setDist(dist);
-                sum+=dist;
-            }
-            sums.add(sum);
-        }
-        ArrayList<Point> centers=new ArrayList<Point> ();
-        for (int i = 0; i <k; i++) 
-        {
-            Cluster C=clusters.get(i);
-            Object[] toArray = C.getPoints().toArray();
-            Arrays.sort(toArray);
-            double acc=0;
-            double sum=sums.get(i)/2;
-            for(int j=0;j<toArray.length;j++)
-            {
-                acc+=((Point)toArray[j]).getDist();
-                if(acc>sum)
-                {
-                    double diff1=Math.abs(sum-(acc-((Point)toArray[j]).getDist()));
-                    double diff2=Math.abs(acc-sum);
-                    if(diff1<diff2)centers.add((Point)toArray[j-1]);
-                    else centers.add((Point)toArray[j]);
-                    break;
-                }
-            }
-        }
-        return centers;
-       
-    }
     public static List<Vector> toListVector(double[][] array )
     {
         LinkedList<Vector> rowsList = new LinkedList<Vector>();
@@ -136,17 +76,19 @@ public class Utility {
     }
 
     //posizione nell'array del min e il riferimento all'oggetto
-    public static Tuple2<Integer, Point> mostClose(ArrayList<Point> P, Point c) {
+    public static Tuple2<Integer, Point> mostClose(Collection<Point> P, Point c) {
         Point p = null;
         double min = Double.MAX_VALUE;
         int argmin = -1;
-        for (int i = 0; i < P.size(); i++) {
-            double dist = Distance.calculateDistance(P.get(i).parseVector(), c.parseVector(), "standard");
-            if (dist <= min && P.get(i).equals(c) == false) {
-                p = P.get(i);
+        int i=0;
+        for (Point ex:P) {
+            double dist = Distance.calculateDistance(ex.parseVector(), c.parseVector());
+            if (dist <= min && ex.equals(c) == false) {
+                p = ex;
                 min = dist;
                 argmin = i;
             }
+            i++;
         }
         return new Tuple2(argmin, p);
     }
@@ -157,7 +99,7 @@ public class Utility {
         int argmin = -1;
         for (int i = 0; i < S.size(); i++) {
             Tuple2<Integer, Point> t = Utility.mostClose(P, S.get(i));
-            double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
+            double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector());
             if (dist <= min ) {//tolto && P.get(i).equals(p) == false
                 p = S.get(i);
                 min = dist;
@@ -167,20 +109,13 @@ public class Utility {
         return new Tuple2(argmin, p);
     }
 
-    public static ArrayList<Point> getRandomCenters(int dim, int k) {
-        ArrayList<Point> S = new ArrayList<Point>(k);
-        for (int i = 0; i <= k - 1; i++) {
-            S.add(new PointSpark(Utility.toArrayList(Evaluation.generateRandomVector(dim).toArray())));
-        }
-        return S;
-    }
 
     public static Tuple2<Integer, Point> mostFar(ArrayList<Point> P, Point c) {
         Point p = null;
         double max = Double.MIN_VALUE;
         int argmax = -1;
         for (int i = 0; i < P.size(); i++) {
-            double dist = Distance.calculateDistance(P.get(i).parseVector(), c.parseVector(), "standard");
+            double dist = Distance.calculateDistance(P.get(i).parseVector(), c.parseVector());
             if (dist >= max && P.get(i).equals(p) == false) {
                 p = P.get(i);
                 max = dist;
@@ -196,7 +131,7 @@ public class Utility {
         int argmax = -1;
         for (int i = 0; i < S.size(); i++) {
             Tuple2<Integer, Point> t = Utility.mostClose(P, S.get(i));
-            double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector(), "standard");
+            double dist = Distance.calculateDistance(t._2.parseVector(), S.get(i).parseVector());
             if (dist >= max) {//tolto  && P.get(i).equals(p) == false
                 p = S.get(i);
                 max = dist;
@@ -215,233 +150,10 @@ public class Utility {
         return dd;
     }
 
-  public static Clustering  PCAClustering( Clustering C,JavaSparkContext sc,int numComp,boolean normalize) throws Exception
-  {
-        ArrayList<Point> P = C.getPoints();
-        ArrayList<Point> centers = C.getCenters();
-        //Creo vettori
-        ArrayList<Vector> vectors = new ArrayList<Vector>();
-        for (Point p : P) {
-            Vector v = p.parseVector();
-            vectors.add(v);
-        }
-        //Trasformo vettori
-        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc.sc(), numComp,false, true);
-        //Creo punti
-        ArrayList<Point> pointsPCA = new ArrayList<Point>();
-        ArrayList<Point> centersPCA = new ArrayList<Point>();
-        for (int i=0;i<PCAs.size();i++)//vectors
-        {
-            Point add=new PointSpark(vectors.get(i));
-            if(centers.contains(P.get(i)))
-            {
-                centersPCA.add(add);
-            }
-            pointsPCA.add(add);
-        }
-        
-        ArrayList<Cluster> clusters = new ArrayList<Cluster>();
-        HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
-
-        for (int i = 0; i < C.getK(); i++) {
-            Cluster CL = new Cluster();
-            CL.setCenter(centers.get(i));
-            clusters.add(CL);
-        }
-        for(int i=0;i<P.size();i++)
-        {
-            Cluster get = C.getMap().get(P.get(i));
-            
-        }
-        return null;
-
-    }
-  
-  public static ArrayList<Point>  reducePointsDim(ArrayList<Point> P,SparkContext sc,int numComp)
-  {
-        ArrayList<Vector> vectors = new ArrayList<Vector>();
-        for (Point p : P) {
-            Vector v = p.parseVector();
-            vectors.add(v);
-        } 
-        ArrayList<Point> Pnew=new ArrayList<Point>();
-        for (Vector v : vectors)//vectors
-        {
-            double d[]=new double[numComp];
-            for(int i=0;i<numComp;i++)
-            {
-                d[i]=v.apply(i);
-            }
-            Vector dense = Vectors.dense(d);
-            Pnew.add(new PointSpark(dense));
-        }
-        return Pnew;
-  }
-  public static ArrayList<Point>  PCAPoints(ArrayList<Point> P,SparkContext sc,int numComp,boolean optimal,boolean normalize) throws Exception
-  {  
-        ArrayList<Vector> vectors = new ArrayList<Vector>();
-        for (Point p : P) {
-            Vector v = p.parseVector();
-            vectors.add(v);
-        }
-        //Trasformo punti in vettori
-        ArrayList<Vector> PCAs = Utility.PCA(vectors, sc,numComp,optimal,normalize);
-        //Trasformo vettori in punti, lo uso solo se voglio stampare il clustering fatto in 2d
-        ArrayList<Point> pointsPCA = new ArrayList<Point>();
-        for (Vector v : PCAs)//vectors
-        {
-            pointsPCA.add(new PointSpark(v));
-        }
-        return pointsPCA;
-  }   
-  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc) throws Exception
-  {  
-      return Utility.PCA(rowsList,sc,2,false,true);
-  } 
-//trova il numero ottimale di componenti  
-  public static int  optimalNumComp(RowMatrix mat ) throws Exception
-  {  
-      int numCols=(int) mat.numCols();
-      int numRows = (int) mat.numRows();
-      DenseMatrix<Object> toBreeze = mat.toBreeze();
-      double d[][]=new double[numRows][numCols];
-      for(int i=0;i<numRows;i++)
-      {
-          for(int j=0;j<numCols;j++)
-          {
-              d[i][j] =(Double) toBreeze.apply(i,j);
-              
-          }
-      }
-      Jama.Matrix M=new Jama.Matrix(d);
-      EigenvalueDecomposition e = M.eig();
-      double[] Eigenvalues = e.getRealEigenvalues(); 
-      ArrayList<Double> AL=new ArrayList<Double>();
-      double sum=0;
-      for(int i=0;i<Eigenvalues.length;i++)
-      {
-          if(Eigenvalues[i]>0){AL.add(Eigenvalues[i]);sum+=Eigenvalues[i];}
-      }
-      double dd[]=new double[AL.size()];
-      Object[] toArray = AL.toArray();
-      for(int i=0;i<toArray.length;i++)
-      {
-          dd[i]=(Double)toArray[i];   
-          //System.out.println(dd[i]/sum);
-      }
-      Arrays.sort(dd);
-      double acc=0;
-      int cont=0;    
-      for(int i=0;i<dd.length;i++)
-      {
-            acc+=dd[i];
-            if(acc/sum<0.95)
-            {
-                cont++;
-            }
-      }
-      
-     System.out.println("DimensioniIniziali: "+numCols+"  DimensioniFinali: "+cont);
-     return cont; 
-      
-  }  
-  //Data una lista di vettori restituisce i vettori dopo la PCA
-  //Se optimal=true allora sceglie il valore ottimale
-  //Se normalize è true allora fa la normalizzazione
-  public static ArrayList<Vector>  PCA( List<Vector> rowsList,SparkContext sc,int numComp,boolean optimal,boolean normalize) throws Exception
-  {     
-    if(normalize)
-    {
-        rowsList=Utility.normalize2(rowsList,sc);
-    }
-    JavaRDD<Vector> rows = JavaSparkContext.fromSparkContext(sc).parallelize(rowsList);
-    // Create a RowMatrix from JavaRDD<Vector>.
-    RowMatrix mat = new RowMatrix(rows.rdd());
-    if(optimal)numComp=Utility.optimalNumComp(mat );
-    System.err.println("STOP");
-    Matrix pc = mat.computePrincipalComponents(numComp); 
-    RowMatrix projected = mat.multiply(pc);
-
-        long numRows = projected.numRows();
-        System.out.println(numRows);
-        //dobbiamo ancora fare la normalizzazione :(
-        DenseMatrix<Object> toBreeze = projected.toBreeze();
-        ArrayList<Vector> vecs=new ArrayList<Vector>();
-        for(int i=0;i<numRows;i++)
-        {
-            double d[]=new double[numComp];
-            for(int j=0;j<numComp;j++)
-            {
-                d[j]=(Double)toBreeze.apply(i,j);
-            }
-            Vector v=Vectors.dense(d);
-            vecs.add(v);
-        }
-    return vecs;
-  }
-  
-  static JavaDoubleRDD removeOutliersMR(JavaDoubleRDD rdd) 
-  {
-    final StatCounter summaryStats = rdd.stats();
-    final Double stddev = Math.sqrt(summaryStats.variance());
-    return rdd.filter(new Function<Double, Boolean>() { public Boolean call(Double x) {
-          return (Math.abs(x - summaryStats.mean()) < 3 * stddev);
-        }});
-  }
   
   
-  public static List<Vector> normalize2(List<Vector> rowsList,SparkContext sc)
-  {
-      for(int i=0;i<rowsList.size();i++)
-      {
-         //System.out.println("PRIMA: "+rowsList.get(i));
-         BLAS.scal( 1/Vectors.norm(rowsList.get(i), 2),  rowsList.get(i));
-         rowsList.set(i,rowsList.get(i) );  
-         //System.out.println("DOPO: "+rowsList.get(i));
-      }
-      return rowsList;
-      
-  }
-  public static List<Vector> normalize(List<Vector> rowsList,SparkContext sc)
-  {
-      int id=0;
-      List<Row> data=new ArrayList<Row>();
-      for(int i=0;i<rowsList.size();i++)
-      {
-        
-        data.add( RowFactory.create(id, rowsList.get(i).asML()));
-      }  
-        StructType schema = new StructType(new StructField[]{
-            new StructField("id", DataTypes.IntegerType, false, Metadata.empty()),
-            new StructField("features", new VectorUDT(), false, Metadata.empty())
-        });
-        SQLContext sqlContext = new SQLContext(sc);
-        Dataset<Row> dataFrame = sqlContext.createDataFrame(data, schema);
-
-        // Normalize each Vector using $L^1$ norm.
-        Normalizer normalizer = new Normalizer()
-          .setInputCol("features")
-          .setOutputCol("normFeatures")
-          .setP(1.0);
-
-        Dataset<Row> l1NormData = normalizer.transform(dataFrame);
-        //l1NormData.show();
-
-        // Normalize each Vector using $L^\infty$ norm.
-        Dataset<Row> lInfNormData =
-          normalizer.transform(dataFrame, normalizer.p().w(Double.POSITIVE_INFINITY));
-        //lInfNormData.show(); 
-        List<Row> normalized = lInfNormData.collectAsList();
-        
-      /*List<Vector> normalizedData=new ArrayList<Vector>();
-      for(int i=0;i<normalized.size();i++)
-      {
-        normalizedData.add( (Vector)normalized.get(i).apply(1));
-      } */        
-      //return normalizedData;
-      return null;
-        
-  }
+  
+  
   
   public static JavaRDD<Point> leggiInput(String s,JavaSparkContext sc)
   {
@@ -477,11 +189,26 @@ public class Utility {
             {
                 if(ss.length()!=0)al.add(Double.parseDouble(ss));
             }
-            //System.out.println(new PointSpark(al));
+            //System.out.println(new PointCentroid(al));
             points.add(new PointSpark(al));
             
         }
         return points;
+  }
+  public static void writeOuptut2(String s,Clustering C) throws IOException
+  {
+        File file=new File(s);
+        //System.out.println(file.getAbsolutePath());
+        FileWriter fw = new FileWriter(file);
+        for(Point p:C.getPoints())
+        {
+                Vector parse = p.parseVector();
+                String stam=String.valueOf(parse.apply(0))+" "+String.valueOf(parse.apply(1));
+                stam=stam+" "+C.getMap().get(p).toString();
+                fw.write(stam+"\n");
+                fw.flush();
+        }
+        fw.close();
   }
   public static void writeOuptut(String s,Clustering C) throws IOException
   {
@@ -501,8 +228,7 @@ public class Utility {
             }
         }
         fw.close();
-  }
-  
+  }  
   public static ArrayList<Point> copy( ArrayList<Point> points)
   {
        ArrayList<Point> P=new  ArrayList<Point>();
@@ -513,78 +239,6 @@ public class Utility {
        return P;
   }
  
-    public static Clustering ORC(int numIterations,double threshold,ArrayList<Point> P) throws IOException
-  {
-      int init=P.size();
-      ArrayList<Point> removeAll=new ArrayList<Point> ();
-      Clustering C=XMeans.XMeans(P, ClusteringBuilder.kmeansPlusPlus(P, 2), 2, 20);
-      for(int i=0;i<numIterations;i++)
-      {
-          System.out.println("Entro For");
-          for(Cluster CL:C.getClusters())
-          {
-            ArrayList<Point> points = CL.getPoints();
-            //double dmax=Collections.max(points).getDist();
-            Tuple2<Double, Double> t = Utility.varianceMedia(points);
-            double std=Math.sqrt(t._2);
-            double media=t._1;
-            ArrayList<Point> remove=new ArrayList<Point>();
-            //System.out.println("dmax: "+dmax);
-            //System.out.println("variance: "+std);
-            for(int j=0;j<points.size();j++)
-            {
-                //System.out.println(("ratio: "+points.get(j).getDist() /dmax));
-                if( (points.get(j).getDist()-media)>(threshold*std))
-                {
-                    
-                    remove.add(points.get(j));        
-                }
-            }
-            //System.out.println("#rimozioni: "+remove.size());
-            removeAll.addAll(remove);
-            for(Point p:remove){C.removePoint(p);}
-            C=ClusteringBuilder.kmeansAlgorithm_old(P, C.getCentroids(), C.getK());
-          }
-
-      }
-      System.out.println("Diff: "+(init-C.getPoints().size()));
-      Clustering output=ClusteringBuilder.kmeansAlgorithm_old(removeAll, ClusteringBuilder.kmeansPlusPlus(removeAll,1), 1);
-      Utility.writeOuptut("output.txt", output);
-      return C;
-      
-  }
-    
-  public static Clustering ORC_old(int numIterations,double threshold,ArrayList<Point> P) throws IOException
-  {
-      
-      Clustering C=XMeans.XMeans(P, ClusteringBuilder.kmeansPlusPlus(P, 2), 2, 20);
-      for(int i=0;i<numIterations;i++)
-      {
-          System.out.println("Entro For");
-          ArrayList<Point> points = C.getPoints();
-          double dmax=Collections.max(points).getDist();
-          Tuple2<Double, Double> t = Utility.varianceMedia(points);
-          double std=Math.sqrt(t._2);
-          double media=t._1;
-          ArrayList<Point> remove=new ArrayList<Point>();
-          System.out.println("dmax: "+dmax);
-          System.out.println("variance: "+std);
-          for(int j=0;j<points.size();j++)
-          {
-               System.out.println(("ratio: "+points.get(j).getDist() /dmax));
-              if( (points.get(j).getDist()-media)>(threshold*std))
-              {
-                  System.out.println("rimuovo");
-                  remove.add(points.get(j));        
-              }
-          }
-          P.removeAll(remove);
-          C=ClusteringBuilder.kmeansAlgorithm_old(P, C.getCentroids(), C.getK());
-
-      }
-      return C;
-      
-  }
   
   public static Tuple2<Double,Double> varianceMedia(List<Point> points)
   {
@@ -602,6 +256,15 @@ public class Utility {
           return new Tuple2(sum,var);
       
   }
+
+    public static Vector generateRandomVector(int size) {
+        double[] dd = new double[size];
+        Random r = new Random();
+        for (int i = 0; i < size; i++) {
+            dd[i] = r.nextDouble() * Double.MAX_VALUE;
+        }
+        return Vectors.dense(dd);
+    }
     
     
 }
