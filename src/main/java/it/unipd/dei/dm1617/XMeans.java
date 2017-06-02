@@ -7,7 +7,10 @@ package it.unipd.dei.dm1617;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiFunction;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -35,7 +38,7 @@ public class XMeans
         ArrayList<Point> P=new ArrayList<Point>(coll.size());
         P.addAll(coll);
         int k=3;
-        ArrayList<Point> S = ClusteringBuilder.kmeansPlusPlus(P, k);
+        ArrayList<Point> S = CentersBuilder.kmeansPlusPlus(P, k);
         Clustering XMeans = XMeans(P,S,k,20);
         
     }
@@ -51,7 +54,7 @@ public class XMeans
         ArrayList<Point> P=new ArrayList<Point>(coll.size());
         P.addAll(coll);
         int k=3;
-        Utility.ORC(3, 2.58, P);
+        ORC.ORC(3, 2.58, P);
     }
     
     public static Clustering XMeans(ArrayList<Point> P, ArrayList<Point> S, int k_init,int kmax) throws IOException
@@ -59,11 +62,14 @@ public class XMeans
         int k=k_init;
         int comp=0;
         Clustering clustering=null;
-        while(k<kmax)
+        int bestK=k;
+        double bestBIC=-Double.MAX_VALUE;
+        ArrayList<Point> bestS=null;
+        while(k<kmax  )
         {
             System.out.println("Eseguo:"+comp);
             comp++;          
-            clustering = ClusteringBuilder.kmeansAlgorithm_old(P, S, k);
+            clustering = KMeans.kmeansAlgorithm(P, S, k);
             Utility.writeOuptut("outputBeforeSplit"+String.valueOf(comp)+".txt", clustering);
             //Improve Structure
             ArrayList<Cluster> clustersOld = (ArrayList<Cluster>)clustering.getClusters().clone();
@@ -74,11 +80,13 @@ public class XMeans
                 
                 double oldBIC = XMeans.BIC(cluster,clustering.getM());
                 int kSplit=2;
-                ArrayList<Point> SSplit = ClusteringBuilder.kmeansPlusPlus(cluster.getPoints(), kSplit);
-                Clustering clusteringSplit = ClusteringBuilder.kmeansAlgorithm_old(cluster.getPoints(), SSplit, kSplit);
+                ArrayList<Point> SSplit = CentersBuilder.kmeansPlusPlus(cluster.getPoints(), kSplit);
+                Clustering clusteringSplit = KMeans.kmeansAlgorithm(cluster.getPoints(), SSplit, kSplit);
                 double newBIC = XMeans.BIC(clusteringSplit);
+                
                 if(oldBIC<newBIC)
                 {
+                    //System.out.println("oldBIC: "+oldBIC+"   newBIC:"+newBIC);
                     clustering.getClusters().remove(cluster);
                     for(int i=0;i<clusteringSplit.getK();i++)
                     {
@@ -87,13 +95,25 @@ public class XMeans
                 }
 
             }
+            Double bic= XMeans.BIC(clustering);
+            System.out.println("bestBIC: "+bestBIC+"  actualBIC:"+bic);
+            //System.out.println("BIC: "+bic);
+            if(bic>bestBIC)
+            {
+                System.out.println("entro");
+                bestBIC=bic;
+                bestK=clustering.getK();
+                bestS=clustering.getCenters();
+            }
+                
             Utility.writeOuptut("outputAfterSplit"+String.valueOf(comp)+".txt", clustering);
             System.out.println("k:"+k+"   clusteringGetK"+clustering.getK());
             if(k==clustering.getK()){System.out.println("ESCO"); break;}
             k=clustering.getK();
             S=clustering.getCentroids();
         }
-        return clustering;
+
+        return KMeans.kmeansAlgorithm(P, bestS, bestK);
     }
     public static double BIC(int k, int n, int d, double distortion, int[] clusterSize)
     {
