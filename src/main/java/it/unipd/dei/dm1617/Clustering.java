@@ -127,9 +127,10 @@ public class Clustering implements Serializable {
             ArrayList<Point> points = C.getPoints();
             Point centroid = C.getCenter();
             for (int l = 0; l < points.size(); l++) {
-                sum += Math.pow(Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard"), 2);
+                sum += Math.pow(Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector()), 2);
             }
         }
+        //System.out.println("sum: "+sum);
         return sum;
     }
 
@@ -147,13 +148,13 @@ public class Clustering implements Serializable {
 
     public double kcenter() {
         double max = Distance.calculateDistance(this.clusters.get(0).getCenter().parseVector(),
-                this.clusters.get(0).getPoints().get(0).parseVector(), "standard");
+                this.clusters.get(0).getPoints().get(0).parseVector());
         for (int j = 0; j <= this.clusters.size() - 1; j++) {
             Cluster C = this.clusters.get(j);
             ArrayList<Point> points = C.getPoints();
             Point centroid = C.getCenter();
             for (int l = 0; l < points.size(); l++) {
-                double dist = Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard");
+                double dist = Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector());
                 if (dist > max) {
                     max = dist;
                 }
@@ -169,7 +170,7 @@ public class Clustering implements Serializable {
             ArrayList<Point> points = C.getPoints();
             Point centroid = C.getCenter();
             for (int l = 0; l < points.size(); l++) {
-                sum += Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector(), "standard");
+                sum += Distance.calculateDistance(centroid.parseVector(), points.get(l).parseVector());
             }
         }
         return sum;
@@ -250,35 +251,25 @@ public class Clustering implements Serializable {
     }
 
     public void reduceDim(SparkContext sc, int numComp) {
-        ArrayList<Point> reducePointsDim = Utility.reducePointsDim(P, sc, numComp);
+        ArrayList<Point> reducePointsDim = PCA.reducePointsDim(P, sc, numComp);
         for (int i = 0; i < P.size(); i++) {
             ((PointSpark) P.get(i)).assignVector(reducePointsDim.get(i).parseVector());
         }
-        reducePointsDim = Utility.reducePointsDim(getCenters(), sc, numComp);
+        reducePointsDim = PCA.reducePointsDim(getCenters(), sc, numComp);
         for (int i = 0; i < reducePointsDim.size(); i++) {
             ((PointSpark) clusters.get(i).getCenter()).assignVector(reducePointsDim.get(i).parseVector());
         }
     }
     
-    public static void setCenters(ArrayList<Cluster> clusters, ArrayList<Point> S) {
-
-		if (clusters.size() != S.size()) {
-			throw new IllegalArgumentException("Clusters and Centroids Lists must have same size k ");
-		}
-		for (int i = 0; i < S.size(); i++) {
-			clusters.get(i).setCenter(S.get(i));
-		}
-	}
-    
-	public static void assignClusters(ArrayList<Cluster> clusters, ArrayList<Point> S, ArrayList<Point> P, HashMap<Point, Cluster> map){
-		for (Point p : P) {
-			Vector parseVector = p.parseVector();
-			Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
-			Cluster C = clusters.get(mostClose._1);
-			map.put(p, C);
-			C.getPoints().add(p);
-			p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
-		}
-	}
+    public void test()
+    {
+        int size = P.size();
+        int sizeClusters=0;
+        for(Cluster CL:clusters)
+        {
+            sizeClusters+=CL.size();
+        }
+        System.out.println("size: "+size+"   sizeClusters: "+sizeClusters);
+    }
 
 }
