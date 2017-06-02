@@ -199,7 +199,7 @@ public class ClusteringBuilderMR {
             JavaRDD<Point> parallelize = sc.parallelize(C.getPoints());
             Broadcast<Point> b = sc.broadcast(C.getCenter());
             Vector centroid = ClusteringBuilderMR.calculateCentroidMR(parallelize, b, 0);
-            PointCentroid p = new PointCentroid(centroid);
+            PointSpark p = new PointSpark(centroid);
             al.add(p);
         }
         return al;

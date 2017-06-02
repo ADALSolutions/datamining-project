@@ -13,16 +13,16 @@ import org.apache.spark.mllib.linalg.Vectors;
  *
  * @author DavideDP
  */
-public class PointCentroid extends Point
+public class PointSpark extends Point
 {
     Vector parse;
     
-    public PointCentroid(ArrayList v) {
+    public PointSpark(ArrayList v) {
         super();
         this.parse = parseVector(v);
     }
     
-    public PointCentroid(Vector v) {
+    public PointSpark(Vector v) {
         super();
         this.parse = v;
     }    
@@ -41,7 +41,7 @@ public class PointCentroid extends Point
     
     public Point copy()
     {
-        PointCentroid p = new PointCentroid(parse.copy());
+        PointSpark p = new PointSpark(parse.copy());
         p.setDist(getDist());
         return p;
     }

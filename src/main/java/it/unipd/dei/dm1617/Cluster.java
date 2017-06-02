@@ -65,7 +65,7 @@ public class Cluster implements Serializable {
 	public Point calculateCentroid() {
 		// se p.size==0 raise exception
 		if (P.size() == 0) {
-			return new PointCentroid(Vectors.zeros(2));
+			return new PointSpark(Vectors.zeros(2));
 		}
 		Vector y = Vectors.zeros(P.get(0).parseVector().size());
 		for (int i = 0; i < this.P.size(); i++) {
@@ -76,7 +76,7 @@ public class Cluster implements Serializable {
 		for (int i = 0; i < y.size(); i++) {
 			al.add(y.apply(i));
 		}
-		return new PointCentroid(al);
+		return new PointSpark(al);
 	}
 
 	// average distance for the point respect to the points of the cluster

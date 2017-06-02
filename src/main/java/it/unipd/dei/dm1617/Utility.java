@@ -170,7 +170,7 @@ public class Utility {
     public static ArrayList<Point> getRandomCenters(int dim, int k) {
         ArrayList<Point> S = new ArrayList<Point>(k);
         for (int i = 0; i <= k - 1; i++) {
-            S.add(new PointCentroid(Utility.toArrayList(Evaluation.generateRandomVector(dim).toArray())));
+            S.add(new PointSpark(Utility.toArrayList(Evaluation.generateRandomVector(dim).toArray())));
         }
         return S;
     }
@@ -232,7 +232,7 @@ public class Utility {
         ArrayList<Point> centersPCA = new ArrayList<Point>();
         for (int i=0;i<PCAs.size();i++)//vectors
         {
-            Point add=new PointCentroid(vectors.get(i));
+            Point add=new PointSpark(vectors.get(i));
             if(centers.contains(P.get(i)))
             {
                 centersPCA.add(add);
@@ -273,7 +273,7 @@ public class Utility {
                 d[i]=v.apply(i);
             }
             Vector dense = Vectors.dense(d);
-            Pnew.add(new PointCentroid(dense));
+            Pnew.add(new PointSpark(dense));
         }
         return Pnew;
   }
@@ -290,7 +290,7 @@ public class Utility {
         ArrayList<Point> pointsPCA = new ArrayList<Point>();
         for (Vector v : PCAs)//vectors
         {
-            pointsPCA.add(new PointCentroid(v));
+            pointsPCA.add(new PointSpark(v));
         }
         return pointsPCA;
   }   
@@ -455,7 +455,7 @@ public class Utility {
             {
                 if(ss.length()!=0)al.add(Double.parseDouble(ss));
             }
-            return new PointCentroid(al);        
+            return new PointSpark(al);        
         }
         );
         return points;
@@ -477,8 +477,8 @@ public class Utility {
             {
                 if(ss.length()!=0)al.add(Double.parseDouble(ss));
             }
-            //System.out.println(new PointCentroid(al));
-            points.add(new PointCentroid(al));
+            //System.out.println(new PointSpark(al));
+            points.add(new PointSpark(al));
             
         }
         return points;

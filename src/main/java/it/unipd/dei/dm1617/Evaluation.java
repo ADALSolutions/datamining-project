@@ -41,7 +41,7 @@ public class Evaluation {
         int sizeVector = X.get(0).parseVector().size();
         for(int i = 0; i < t; i++) {
             //genero numeri troppo grandi secondo me
-            generated.add(new PointCentroid(Evaluation.generateRandomVector(sizeVector)));
+            generated.add(new PointSpark(Evaluation.generateRandomVector(sizeVector)));
         }
         //CALCOLO w_i e u_i
         //P.removeAll(X);//credo vadano tolti altrimenti per se stesso il punto ha dist=0

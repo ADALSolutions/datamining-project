@@ -252,11 +252,11 @@ public class Clustering implements Serializable {
     public void reduceDim(SparkContext sc, int numComp) {
         ArrayList<Point> reducePointsDim = Utility.reducePointsDim(P, sc, numComp);
         for (int i = 0; i < P.size(); i++) {
-            ((PointCentroid) P.get(i)).assignVector(reducePointsDim.get(i).parseVector());
+            ((PointSpark) P.get(i)).assignVector(reducePointsDim.get(i).parseVector());
         }
         reducePointsDim = Utility.reducePointsDim(getCenters(), sc, numComp);
         for (int i = 0; i < reducePointsDim.size(); i++) {
-            ((PointCentroid) clusters.get(i).getCenter()).assignVector(reducePointsDim.get(i).parseVector());
+            ((PointSpark) clusters.get(i).getCenter()).assignVector(reducePointsDim.get(i).parseVector());
         }
     }
     
