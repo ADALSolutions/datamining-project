@@ -9,6 +9,7 @@ public abstract class Point implements Serializable,Comparable{
     protected String ID;
     public static int ID_static=0;
     private double dist;//Attributo Aggiunto per metodo euristico
+    private String ID_Cluster;
     public Point() {
         ID=String.valueOf(ID_static);
         ID_static++;
@@ -76,6 +77,14 @@ public abstract class Point implements Serializable,Comparable{
         if(this.dist>other.getDist()) return 1;
         if(this.dist==other.getDist()) return 0;
         return -1;
+    }
+
+    public String getID_Cluster() {
+        return ID_Cluster;
+    }
+
+    public void setID_Cluster(String ID_Cluster) {
+        this.ID_Cluster = ID_Cluster;
     }
     
     
