@@ -14,7 +14,6 @@ import java.util.function.Function;
 import org.apache.spark.mllib.linalg.Vector;
 import org.json4s.Merge;
 import scala.Tuple2;
-import it.unipd.dei.dm1617.Cluster;
 
 /**
  *
@@ -31,16 +30,25 @@ public class ClusteringBuilder implements Serializable {
 
 		ArrayList<Cluster> clusters = new ArrayList<Cluster>();
 		HashMap<Point, Cluster> map = new HashMap<Point, Cluster>();
+		// for i <- 1 to k do C_i <- null
+        for (int i = 0; i < k; i++) {
+            Cluster C = new Cluster();
+            C.setCenter(S.get(i));
+            clusters.add(C);
+        }
+        if (k == 1) {
+            clusters.get(0).getPoints().addAll(P);
+            return new Clustering(P, clusters, S);
+        }
+        for (Point p : P) {
+            Vector parseVector = p.parseVector();
+            Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
+            Cluster C = clusters.get(mostClose._1);
+            map.put(p, C);
+            C.getPoints().add(p);
+            p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector()));
 
-		Clustering.setCenters(clusters, S);
-
-		if (k == 1) {
-			clusters.get(0).getPoints().addAll(P);
-			return new Clustering(P, clusters, S);
-		}
-
-		Clustering.assignClusters(clusters, S, P, map);
-
+        }
 		return new Clustering(P, clusters, S);// S centroidi
 	}
 
@@ -70,7 +78,7 @@ public class ClusteringBuilder implements Serializable {
 				Cluster C = clusters.get(mostClose._1);
 				map.put(p, C);
 				C.getPoints().add(p);
-				p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
+				p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector()));
 
 			}
 			long end = System.currentTimeMillis();
@@ -87,7 +95,7 @@ public class ClusteringBuilder implements Serializable {
 				Cluster C = C2.getMap().get(p);
 				int index = C2.getClusters().indexOf(C);
 				Point center = S.get(index);
-				double dist2 = Distance.calculateDistance(parseVector, center.parseVector(), "standard");
+				double dist2 = Distance.calculateDistance(parseVector, center.parseVector());
 
 				if (euristic) {
 
@@ -106,7 +114,7 @@ public class ClusteringBuilder implements Serializable {
 						Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
 						C = clusters.get(mostClose._1);
 						C2.assignPoint(p, C);
-						p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector(), "standard"));
+						p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector()));
 						long end = System.nanoTime();
 						// System.out.println("PezzoLungo: "+(end-start));
 					}
@@ -116,7 +124,7 @@ public class ClusteringBuilder implements Serializable {
 					Tuple2<Integer, Point> mostClose = Utility.mostClose(S, p);
 					C = clusters.get(mostClose._1);
 					C2.assignPoint(p, C);
-					p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector(), "standard"));
+					p.setDist(Distance.calculateDistance(p.parseVector(), mostClose._2.parseVector()));
 				}
 
 			}
@@ -131,35 +139,32 @@ public class ClusteringBuilder implements Serializable {
 
 	public static Clustering FarthestFirstTraversal(ArrayList<Point> P, int k) {
 
-		/*
-		 * rimuovo i punti dal clustering in modo da tener traccia dei rimanenti
-		 * P\cc poi li riaggiungo tutti alla fine, credo sia più efficiente
-		 */
-		Point first = P.get(new Random().nextInt(P.size()));
-		ArrayList<Point> S = new ArrayList<Point>();
-		S.add(first);
-		P.remove(first);
-		// se p.size<k allora raise error
-		for (int i = 0; i <= k - 2; i++) {
-			// prendo come inizio sempre la distanza tra il primo
-			// centroide(first) e il primo punto(P.get(0))
-			double max = Distance.calculateDistance(first.parseVector(), P.get(0).parseVector(), "standard");
-			int argmax = 0;
-			for (int j = 0; j < P.size(); j++) {
-				Point esamina = P.get(j);
-				for (int l = 0; l < S.size(); l++) {
-					double dist = Distance.calculateDistance(esamina.parseVector(), S.get(l).parseVector(), "standard");
-					if (dist > max) {
-						max = dist;
-						argmax = j;
-					}
-				}
-			}
-			S.add(P.get(argmax));
-			P.remove(argmax);
-		}
-		P.addAll(S);
-		return ClusteringBuilder.Partition(P, S, k);
+		/* rimuovo i punti dal clustering in modo da tener traccia dei rimanenti P\cc
+         poi li riaggiungo tutti alla fine, credo sia più efficiente*/
+        Point first = P.get(new Random().nextInt(P.size()));
+        ArrayList<Point> S = new ArrayList<Point>();
+        S.add(first);
+        P.remove(first);
+        //se p.size<k allora raise error 
+        for (int i = 0; i <= k - 2; i++) {
+            //prendo come inizio sempre la distanza tra il primo centroide(first) e il primo punto(P.get(0))
+            double max = Distance.calculateDistance(first.parseVector(), P.get(0).parseVector());
+            int argmax = 0;
+            for (int j = 0; j < P.size(); j++) {
+                Point esamina = P.get(j);
+                for (int l = 0; l < S.size(); l++) {
+                    double dist = Distance.calculateDistance(esamina.parseVector(), S.get(l).parseVector());
+                    if (dist > max) {
+                        max = dist;
+                        argmax = j;
+                    }
+                }
+            }
+            S.add(P.get(argmax));
+            P.remove(argmax);
+        }
+        P.addAll(S);
+        return ClusteringBuilder.Partition(P, S, k);
 	}
 
 	public static Clustering kmeansAlgorithm_old(ArrayList<Point> P, ArrayList<Point> S, int k) {
@@ -188,29 +193,27 @@ public class ClusteringBuilder implements Serializable {
 	}
 
 	public static Clustering kmeansEuristic_old(ArrayList<Point> P, ArrayList<Point> S, int k) {
-		Clustering primeClustering = ClusteringBuilder.PartitionEuristic_old(P, S, k, true, null);
-		;
-		boolean stopping_condition = false;
-		double phi = primeClustering.kmeans();
-		boolean stoppingCondition = false;
-		int cont = 0;
-		while (!stoppingCondition) {
-			cont++;
-			// Calcolo nuovo Clustering
-			ArrayList<Point> centroids = primeClustering.getCentroids();
-			Clustering secondClustering = ClusteringBuilder.PartitionEuristic_old(P, centroids, k, false,
-					primeClustering);
-			double phikmeans = secondClustering.kmeans();
-			// Valuto se quello nuovo è megliore rispetto a quello vecchio
-			if (phi > phikmeans) {
-				phi = phikmeans;
-				primeClustering = secondClustering;
-			} else {
-				stoppingCondition = true;
-			}
-		}
-		System.out.println("Cont: " + cont);
-		return primeClustering;
+		Clustering primeClustering = ClusteringBuilder.PartitionEuristic_old(P, S, k, true, null);;
+        boolean stopping_condition = false;
+        double phi = primeClustering.kmeans();
+        boolean stoppingCondition = false;
+        int cont = 0;
+        while (!stoppingCondition) {
+            cont++;
+            //Calcolo nuovo Clustering
+            ArrayList<Point> centroids = primeClustering.getCentroids();
+            Clustering secondClustering = ClusteringBuilder.PartitionEuristic_old(P, centroids, k, false, primeClustering);
+            double phikmeans = secondClustering.kmeans();
+            //Valuto se quello nuovo è megliore rispetto a quello vecchio
+            if (phi > phikmeans) {
+                phi = phikmeans;
+                primeClustering = secondClustering;
+            } else {
+                stoppingCondition = true;
+            }
+        }
+        System.out.println("Cont: " + cont);
+        return primeClustering;
 	}
 
 	public static ArrayList<Point> getRandomCenters(ArrayList<Point> P, int k) {
@@ -233,10 +236,9 @@ public class ClusteringBuilder implements Serializable {
 			double sum = 0;
 			// Calcolare dP
 			for (int j = 0; j < P.size(); j++) {
-				double min = Distance.calculateDistance(P.get(j).parseVector(), S.get(0).parseVector(), "standard");
+				double min = Distance.calculateDistance(P.get(j).parseVector(), S.get(0).parseVector());
 				for (int l = 0; l < S.size(); l++) {
-					double dist = min = Distance.calculateDistance(P.get(j).parseVector(), S.get(l).parseVector(),
-							"standard");
+					double dist = min = Distance.calculateDistance(P.get(j).parseVector(), S.get(l).parseVector());
 					if (dist < min) {
 						min = dist;
 					}
@@ -404,7 +406,7 @@ public class ClusteringBuilder implements Serializable {
 				Cluster C = clusters.get(mostClose._1);
 				map.put(p, C);
 				C.getPoints().add(p);
-				p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
+				p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector()));
 
 			}
 			return new Clustering(P, clusters, S);// S centroidi
@@ -432,7 +434,7 @@ public class ClusteringBuilder implements Serializable {
 				Point center = C2.getMap().get(p).getCenter();
 				int index = C2.getCenters().indexOf(center);
 				Point centroid = S.get(index);
-				double dist2 = Distance.calculateDistance(parseVector, centroid.parseVector(), "standard");
+				double dist2 = Distance.calculateDistance(parseVector, centroid.parseVector());
 				if (p.getDist() == dist2) {// System.out.println("BAKA");
 				}
 				if (p.getDist() > dist2) {
@@ -447,7 +449,7 @@ public class ClusteringBuilder implements Serializable {
 					Cluster C = clusters.get(mostClose._1);
 					map.put(p, C);
 					C.getPoints().add(p);
-					p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector(), "standard"));
+					p.setDist(Distance.calculateDistance(p.parseVector(), C.getCenter().parseVector()));
 				}
 
 			}
