@@ -16,7 +16,7 @@ import scala.Tuple2;
 
 public class Cluster implements Serializable {
 
-	// Assuming Center-based Cluster
+	// Assuming Center-based Cluster	
 	private ArrayList<Point> P; // Points that belong to the Cluster
 	private Point center; // centroid
 	private String ID; // this can be useful
@@ -41,7 +41,7 @@ public class Cluster implements Serializable {
 	}
 
 	public Cluster() {
-		// così il centro è a null
+		//così il centro è a null
 		this(new ArrayList<Point>(), null, false);
 	}
 
@@ -56,38 +56,41 @@ public class Cluster implements Serializable {
 	public Point getCenter() {
 		return this.center;
 	}
+	//serve ?
 
-	// serve ?
 	public void setCenter(Point c) {
 		this.center = c;
 	}
 
 	public Point calculateCentroid() {
-		// se p.size==0 raise exception
+		//se p.size==0 raise exception
 		if (P.size() == 0) {
-			return new PointSpark(Vectors.zeros(2));
+			return center;
+			//System.out.println("P size 0 !     IDCluster: "+ID);
+			//return new PointCentroid(Vectors.zeros(2));
 		}
 		Vector y = Vectors.zeros(P.get(0).parseVector().size());
 		for (int i = 0; i < this.P.size(); i++) {
 			BLAS.axpy(1, P.get(i).parseVector(), y);
 		}
 		BLAS.scal(((double) 1) / P.size(), y);
-		ArrayList al = new ArrayList(y.size());
+		double[] al = new double[y.size()];
 		for (int i = 0; i < y.size(); i++) {
-			al.add(y.apply(i));
+			al[i] = y.apply(i);
 		}
-		return new PointSpark(al);
+		//System.out.println(al.length);
+		return new PointSpark(Vectors.dense(al));
 	}
 
-	// average distance for the point respect to the points of the cluster
+	//average distance for the point respect to the points of the cluster
 	public double averageDistance(Point p) {
 		double sum = 0;
 		boolean present = false;
 		double length;
 		for (int i = 0; i < P.size(); i++) {
 			if (!p.equals(P.get(i))) {
-				// dovrebbe essere euclidean distance con r=1
-				sum += Distance.calculateDistance(p.parseVector(), P.get(i).parseVector(), "standard");
+				//dovrebbe essere euclidean distance con r=1
+				sum += Distance.calculateDistance(p.parseVector(), P.get(i).parseVector());
 			}
 			else {
 				present = true;
@@ -106,21 +109,19 @@ public class Cluster implements Serializable {
 		Point centroid = this.center;
 		double sum = 0;
 		for (Point p : this.getPoints()) {
-			// dovrebbe essere standardDistance
-			sum += Math.pow(Distance.calculateDistance(p.parseVector(), centroid.parseVector(), "standard"), 2);
+			//dovrebbe essere standardDistance
+			sum += Math.pow(Distance.calculateDistance(p.parseVector(), centroid.parseVector()), 2);
 		}
 		return sum;
 	}
+	//Restituisce un Cluster con punti l'unione dei 2 cluster e come centro il nuovo centroide
 
-	// Restituisce un Cluster con punti l'unione dei 2 cluster e come centro il
-	// nuovo centroide
 	public static Cluster union(Cluster C1, Cluster C2) {
 		HashSet<Point> set = new HashSet(C1.getPoints());
-		set.addAll(C2.getPoints());// nota:set non ammette duplicati
+		set.addAll(C2.getPoints());//nota:set non ammette duplicati
 		ArrayList<Point> al = (ArrayList<Point>) new ArrayList<Point>();
 		al.addAll(set);
-		Cluster union = new Cluster(al);// il suo centro non equivale al
-		// centroide
+		Cluster union = new Cluster(al);//il suo centro non equivale al centroide
 		return union;
 	}
 
@@ -170,8 +171,12 @@ public class Cluster implements Serializable {
 	//kmeans eseguito in parallelo per un cluster
 	public static double kmeansMR(JavaRDD<Point> points, Broadcast<Point> Bcenter) {
 		Point center = Bcenter.value();
+		int s = (int) points.count();
+		if (s == 0) {
+			return 0.0;
+		}
 		JavaRDD<Double> map1 = points.map((p) -> {
-			return Math.pow(Distance.calculateDistance(p.parseVector(), center.parseVector(), "standard"), 2);
+			return Math.pow(Distance.calculateDistance(p.parseVector(), center.parseVector()), 2);
 		});
 		Double reduce = map1.reduce((Double d1, Double d2) -> {
 			return d1 + d2;
@@ -197,7 +202,7 @@ public class Cluster implements Serializable {
 	public double kmeans() {
 		double sum = 0;
 		for (Point p : getPoints()) {
-			sum += Math.pow(Distance.calculateDistance(center.parseVector(), p.parseVector(), "standard"), 2);
+			sum += Math.pow(Distance.calculateDistance(center.parseVector(), p.parseVector()), 2);
 		}
 		return sum;
 	}
