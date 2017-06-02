@@ -151,18 +151,13 @@ public class TestOnWikiDataset {
 		//Set up experiments for increasing k values, calculate performance and evaluate Objective funcion.
 		//Create a KMeans object.
 		System.out.println("Initializing kmeans...");
-		KMeans kmeansBuilder = new KMeans()
-				.setEpsilon(1e-4)
-				.setInitializationMode("random")
-				.setMaxIterations(10);
 		double cost;
 		double time;
 		double performance;
 		System.out.printf("|    k    |   cost   |   time   | performance |");
 		for (int k = 2; k < MAXK; k++) {
-			kmeansBuilder.setK(k);
 			start = System.currentTimeMillis();
-			KMeansModel clustering = kmeansBuilder.run(vectorDocs.rdd());
+			KMeansModel clustering = KMeans.train(vectorDocs.rdd(), k, 10);
 			end = System.currentTimeMillis();
 			/**
 			 * Note that the fact that we can compute the cost of the clustering
