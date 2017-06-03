@@ -16,6 +16,8 @@ import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.broadcast.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import org.apache.spark.sql.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,7 +32,7 @@ import java.util.List;
  */
 public class TestOnWikiDataset {
 
-	public static final int VSIZE = 2;
+	public static final int VSIZE = 100;
 	public static double start;
 	public static double end;
 
@@ -147,7 +149,8 @@ public class TestOnWikiDataset {
 		//cache vector docs because kmeans is iterative
 		System.out.println("caching vectors representing documents");
 		vectorDocs.cache();
-
+		
+		/*
 		//Set up experiments for increasing k values, calculate performance and evaluate Objective funcion.
 		//Create a KMeans object.
 		System.out.println("Initializing kmeans...");
@@ -167,11 +170,25 @@ public class TestOnWikiDataset {
 			 * can train the clustering with the small dataset and evaluate it
 			 * with the medium dataset, if we import it.
 			 */
+		/*
 			cost = clustering.computeCost(vectorDocs.rdd());
 			time = end - start;
 			performance = ((double) 1) / (cost * time);
 			System.out.printf("|   %s   |   %s   |   %s   |   %s   |", k, cost, time, performance);
 		}
+		*/
+		List<Vector> vectors = vectorDocs.collect();
+		try{
+		PrintWriter writer = new PrintWriter("vector-docs-large-dataset.txt", "UTF-8");
+		vectors.forEach((p) -> {
+		writer.println(p.apply(0) + " " + p.apply(1));
+		});
+		writer.close();
+		} catch (IOException e) {
+		System.err.println(e);
+		}
+		
+    
 
 	}
 
