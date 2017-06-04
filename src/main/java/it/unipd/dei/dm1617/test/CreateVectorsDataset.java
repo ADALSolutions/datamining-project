@@ -32,15 +32,15 @@ import java.util.List;
  */
 public class CreateVectorsDataset {
 
-	public static final int VSIZE = 100;
+	public static int VSIZE;
 	public static double start;
 	public static double end;
-
-	public static int MAXK = 10;
 
 	public static void main(String[] args) {
 		String dataPath = args[0];
 		String modelPath = args[1];
+		String vectorsPath = args[2];
+		VSIZE = Integer.parseInt(args[3]);
 
 		// Usual setup
 		SparkConf conf = new SparkConf(true).setAppName("TestOnWikiDataset");
@@ -145,29 +145,29 @@ public class CreateVectorsDataset {
 		System.out.printf("Time to transform lemmas = %s milliseconds%n", end - start);
 
 		//printrdd(vectorLemmas);
-
 		//cache vector docs because kmeans is iterative
 		System.out.println("caching vectors representing documents");
 		vectorDocs.cache();
-		
-		List<Vector> vectors = vectorDocs.collect();
-		try{
-		PrintWriter writer = new PrintWriter("vector-docs-large-dataset.txt", "UTF-8");
-		vectors.forEach((p) -> {
-		writer.println(p.apply(0) + " " + p.apply(1));
-		});
-		writer.close();
-		} catch (IOException e) {
-		System.err.println(e);
-		}
-		
-    
 
+		List<Vector> vectors = vectorDocs.collect();
+		try {
+			PrintWriter writer = new PrintWriter(vectorsPath, "UTF-8");
+			vectors.forEach((p) -> {
+				for (int i = 0; i < 100; i++) {
+					writer.printf(p.apply(i) + "   ");
+				}
+				writer.println();
+			});
+			writer.close();
+		}
+		catch (IOException e) {
+			System.err.println(e);
+		}
 	}
 
 	/*
 	* Debugging method
-	*/
+	 */
 	private static void printrdd(JavaRDD<Iterable<Vector>> rdd) {
 		for (Iterable<Vector> i : rdd.take(10)) {
 			for (Vector v : i) {
@@ -175,5 +175,5 @@ public class CreateVectorsDataset {
 			}
 		}
 	}
-	
+
 }
